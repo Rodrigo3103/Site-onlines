@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.6</title>
+    <title>PONTO PRO v4.7</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -28,6 +28,7 @@
         --local-bg: #e8f8f5;
         --alert-color: #e67e22;
         --visitor-blue: #3498db;
+        --whatsapp: #25d366;
       }
       body.dark-mode {
         --bg-body: #18191a;
@@ -36,8 +37,6 @@
         --text-sub: #b0b3b8;
         --border: #3a3b3c;
         --nav-bg: #242526;
-        --local-bg: #1e3a34;
-        --visitor-blue: #2980b9;
       }
       * {
         box-sizing: border-box;
@@ -99,7 +98,6 @@
         margin-bottom: 15px;
       }
 
-      /* CARDS v4.6 */
       .emp-card {
         background: var(--bg-card);
         border-radius: 15px;
@@ -115,7 +113,6 @@
       .emp-card.tipo-terceirizado {
         border-left: 5px solid #9b59b6;
       }
-
       .emp-card.has-alert {
         border: 2px solid var(--alert-color);
         animation: pulseAlert 2s infinite;
@@ -142,29 +139,12 @@
         margin-bottom: 5px;
         display: inline-block;
       }
-
-      .alert-msg {
-        background: var(--alert-color);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 5px;
-        font-size: 10px;
-        font-weight: bold;
-        margin-top: 5px;
-        display: inline-block;
-      }
       .status-pill {
         font-size: 10px;
         padding: 4px 8px;
         border-radius: 6px;
         font-weight: 900;
         color: white;
-      }
-      .marcacoes-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin: 12px 0;
       }
       .time-tag {
         background: var(--bg-body);
@@ -173,6 +153,23 @@
         font-size: 11px;
         font-weight: bold;
         border: 1px solid var(--border);
+      }
+
+      .btn-whatsapp {
+        background: var(--whatsapp);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        width: fit-content;
+        margin-top: 5px;
       }
 
       .smart-details {
@@ -184,7 +181,7 @@
         border-radius: 8px;
       }
       .emp-card.open .smart-details {
-        max-height: 800px;
+        max-height: 900px;
         opacity: 1;
         margin-top: 10px;
         padding: 10px;
@@ -203,7 +200,6 @@
         justify-content: center;
         gap: 5px;
       }
-
       .tab-pane {
         display: none;
       }
@@ -277,7 +273,6 @@
       }
       .local-card.visitante {
         border-color: var(--visitor-blue);
-        background: #ebf5fb;
       }
       .local-timer {
         font-family: monospace;
@@ -295,7 +290,7 @@
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.6</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.7</small>
         </h1>
         <input
           type="date"
@@ -346,7 +341,7 @@
           type="text"
           id="searchInput"
           class="search-input"
-          placeholder="🔍 Buscar nome, placa ou tipo (Visitante...)"
+          placeholder="🔍 Buscar nome, placa ou tipo..."
           oninput="renderizarCards()"
         />
         <div id="cardsContainer"></div>
@@ -378,7 +373,7 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas v4.6</h3>
+        <h3>⚙️ Ferramentas v4.7</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
@@ -444,10 +439,7 @@
         <h3 id="tituloCrud">Cadastro</h3>
         <input type="hidden" id="editFuncId" />
 
-        <label style="font-size: 10px; font-weight: bold"
-          >TIPO DE VÍNCULO</label
-        >
-        <select id="formVinculo" class="search-input" style="margin-top: 5px">
+        <select id="formVinculo" class="search-input">
           <option value="COLABORADOR">COLABORADOR</option>
           <option value="VISITANTE">VISITANTE</option>
           <option value="TERCEIRIZADO">TERCEIRIZADO</option>
@@ -461,9 +453,16 @@
         />
         <input
           type="text"
+          id="formTelefone"
+          class="search-input"
+          placeholder="WhatsApp (DDD) 90000-0000"
+          oninput="aplicarMascaraTelefone(this)"
+        />
+        <input
+          type="text"
           id="formFuncao"
           class="search-input"
-          placeholder="Cargo ou Motivo"
+          placeholder="Cargo / Setor"
         />
 
         <div
@@ -514,7 +513,7 @@
               font-weight: bold;
               color: var(--alert-color);
             "
-            >⚠️ ALERTA RÁPIDO</label
+            >⚠️ ALERTA DE PÁTIO</label
           >
           <select id="formAlerta" class="search-input" style="margin-top: 5px">
             <option value="">NENHUM</option>
@@ -524,13 +523,6 @@
             <option value="IR À GERÊNCIA">🏢 IR À GERÊNCIA</option>
           </select>
         </div>
-
-        <input
-          type="text"
-          id="formObs"
-          class="search-input"
-          placeholder="Observações"
-        />
 
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Sair</button>
@@ -552,7 +544,6 @@
           type="text"
           id="modalMarcacoes"
           class="search-input"
-          placeholder="08:00:00, 12:00:00"
           oninput="aplicarMascaraPonto(this)"
         />
         <input type="hidden" id="modalFuncionarioId" />
@@ -596,21 +587,47 @@
 
       setInterval(atualizarCronometros, 1000);
 
-      function aplicarMascaraPlaca(input) {
-        let v = input.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-        if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
-        input.value = v;
+      function aplicarMascaraTelefone(i) {
+        let v = i.value.replace(/\D/g, "");
+        if (v.length > 11) v = v.substring(0, 11);
+        if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
+        if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
+        i.value = v;
       }
 
-      function aplicarMascaraPonto(input) {
-        let v = input.value.replace(/\D/g, "");
-        let formatado = "";
-        for (let i = 0; i < v.length; i++) {
-          if (i > 0 && i % 6 === 0) formatado += ", ";
-          else if (i > 0 && i % 2 === 0 && i % 6 !== 0) formatado += ":";
-          formatado += v[i];
+      function aplicarMascaraPlaca(i) {
+        let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
+        i.value = v;
+      }
+
+      function aplicarMascaraPonto(i) {
+        let v = i.value.replace(/\D/g, "");
+        let f = "";
+        for (let j = 0; j < v.length; j++) {
+          if (j > 0 && j % 6 === 0) f += ", ";
+          else if (j > 0 && j % 2 === 0 && j % 6 !== 0) f += ":";
+          f += v[j];
         }
-        input.value = formatado;
+        i.value = f;
+      }
+
+      function enviarZap(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        if (!f.telefone) return alert("WhatsApp não cadastrado!");
+        const num = f.telefone.replace(/\D/g, "");
+        let msg = `Olá ${f.nome}, tudo bem? Mensagem do PONTO PRO.`;
+        if (f.alertaAtivo) {
+          msg = `Olá ${f.nome}, notamos pelo sistema que seu veículo ${
+            f.veiculoModelo || ""
+          } (${f.placa || ""}) está com: *${f.alertaAtivo}* no pátio.`;
+        }
+        window.open(
+          `https://api.whatsapp.com/send?phone=55${num}&text=${encodeURIComponent(
+            msg
+          )}`,
+          "_blank"
+        );
       }
 
       function renderizarCards() {
@@ -622,13 +639,9 @@
 
         dadosFuncionarios
           .filter((f) => {
-            const termo = (
-              f.nome +
-              f.funcao +
-              (f.placa || "") +
-              (f.vinculo || "")
-            ).toUpperCase();
-            return termo.includes(busca);
+            return (f.nome + (f.placa || "") + (f.vinculo || ""))
+              .toUpperCase()
+              .includes(busca);
           })
           .forEach((f) => {
             const histDia = f.historico?.[dataSelecionadaISO] || {};
@@ -639,20 +652,7 @@
                 : m.length % 2 !== 0
                 ? "PENDENTE"
                 : "FECHADO";
-            const corStatus =
-              status === "FECHADO"
-                ? "var(--success)"
-                : status === "PENDENTE"
-                ? "var(--warning)"
-                : "var(--text-sub)";
-
             const vinculo = f.vinculo || "COLABORADOR";
-            const corVinculo =
-              vinculo === "VISITANTE"
-                ? "var(--visitor-blue)"
-                : vinculo === "TERCEIRIZADO"
-                ? "#9b59b6"
-                : "var(--text-sub)";
             const classeTipo =
               vinculo === "VISITANTE"
                 ? "tipo-visitante"
@@ -664,12 +664,24 @@
             <div class="emp-card ${classeTipo} ${
               f.alertaAtivo ? "has-alert" : ""
             }" onclick="this.classList.toggle('open')">
-              <span class="badge-vinculo" style="background:${corVinculo}">${vinculo}</span>
+              <span class="badge-vinculo" style="background:${
+                vinculo === "VISITANTE"
+                  ? "#3498db"
+                  : vinculo === "TERCEIRIZADO"
+                  ? "#9b59b6"
+                  : "#636e72"
+              }">${vinculo}</span>
               <div style="display:flex; justify-content:space-between; align-items:center">
                 <div><b style="font-size:16px">${f.nome}</b><br><small>${
               f.funcao
             }</small></div>
-                <span class="status-pill" style="background:${corStatus}">${status}</span>
+                <span class="status-pill" style="background:${
+                  status === "FECHADO"
+                    ? "var(--success)"
+                    : status === "PENDENTE"
+                    ? "var(--warning)"
+                    : "var(--text-sub)"
+                }">${status}</span>
               </div>
               <div class="marcacoes-row">
                 ${
@@ -677,22 +689,24 @@
                   "---"
                 }
               </div>
-              ${
-                f.alertaAtivo
-                  ? `<div class="alert-msg">⚠️ ${f.alertaAtivo}</div>`
-                  : ""
-              }
-              ${
-                histDia.editado
-                  ? '<div class="edited-badge" style="font-size:8px; color:red">✏️ Ajustado pelo Adm</div>'
-                  : ""
-              }
+              <div style="display:flex; gap:10px; align-items:center">
+                ${
+                  f.telefone
+                    ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZap('${f.id}')"><span>📱</span> WhatsApp</button>`
+                    : ""
+                }
+                ${
+                  f.alertaAtivo
+                    ? `<span class="alert-msg">⚠️ ${f.alertaAtivo}</span>`
+                    : ""
+                }
+              </div>
               <div class="smart-details">
                 <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
-                    <b>🚗 Veículo:</b> ${f.veiculoModelo || "-"} (${
-              f.veiculoCor || "-"
-            }) | <b>🎫 Placa:</b> ${f.placa || "-"}<br>
-                    <b>📝 Obs:</b> ${f.observacao || "-"}
+                    <b>🚗 Veículo:</b> ${
+                      f.veiculoModelo || "-"
+                    } | <b>🎫 Placa:</b> ${f.placa || "-"}<br>
+                    <b>📞 Tel:</b> ${f.telefone || "Não cadastrado"}
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
                   <button class="btn" style="background:#17a2b8; color:white" onclick="event.stopPropagation(); gerarFolhaIndividual('${
@@ -711,7 +725,7 @@
               </div>
               <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px" onclick="event.stopPropagation(); baterPonto('${
                 f.id
-              }')">REGISTRAR ENTRADA/SAÍDA</button>
+              }')">REGISTRAR PONTO</button>
             </div>`;
           });
         atualizarDashboard();
@@ -727,10 +741,10 @@
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
           if (m.length % 2 !== 0) {
             count++;
-            const isVisitante =
+            const isVis =
               f.vinculo === "VISITANTE" || f.vinculo === "TERCEIRIZADO";
             p.innerHTML += `
-              <div class="local-card ${isVisitante ? "visitante" : ""} ${
+              <div class="local-card ${isVis ? "visitante" : ""} ${
               f.alertaAtivo ? "has-alert" : ""
             }">
                 <small style="font-weight:bold; color:var(--text-sub)">${
@@ -741,11 +755,11 @@
                 <div style="font-size:10px; margin-top:8px; border-top:1px dashed #ccc; padding-top:5px">
                    <span style="background:#333;color:white;padding:1px 4px;border-radius:3px">${
                      f.placa || "S/P"
-                   }</span><br>
+                   }</span>
                    ${
-                     f.alertaAtivo
-                       ? `<b style="color:var(--alert-color)">⚠️ ${f.alertaAtivo}</b>`
-                       : `<span>${f.veiculoModelo || "-"}</span>`
+                     f.telefone
+                       ? `<br><a href="#" onclick="enviarZap('${f.id}')" style="color:var(--whatsapp); text-decoration:none; font-weight:bold">CHAMAR ZAP</a>`
+                       : ""
                    }
                 </div>
               </div>`;
@@ -777,6 +791,7 @@
           id: id,
           vinculo: document.getElementById("formVinculo").value,
           nome: document.getElementById("formNome").value.toUpperCase(),
+          telefone: document.getElementById("formTelefone").value,
           funcao: document.getElementById("formFuncao").value.toUpperCase(),
           placa: document.getElementById("formPlaca").value.toUpperCase(),
           veiculoModelo: document
@@ -786,7 +801,6 @@
             .getElementById("formVeiculoCor")
             .value.toUpperCase(),
           alertaAtivo: document.getElementById("formAlerta").value,
-          observacao: document.getElementById("formObs").value.toUpperCase(),
           historico: fExistente ? fExistente.historico || {} : {},
         };
         db.ref("funcionarios/" + id)
@@ -819,17 +833,14 @@
           .map((t) => t.trim())
           .filter((t) => t);
         db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
-          .update({
-            marcacoes: m,
-            editado: true,
-          })
+          .update({ marcacoes: m, editado: true })
           .then(() => closePontoEditModal());
       }
 
       function validarGestor(cb) {
         const s = localStorage.getItem(PASS_KEY);
         if (!s) {
-          const n = prompt("Crie uma senha Admin:");
+          const n = prompt("Defina senha Admin:");
           if (n) {
             localStorage.setItem(PASS_KEY, n);
             cb();
@@ -847,13 +858,13 @@
         document.getElementById("formVinculo").value =
           f.vinculo || "COLABORADOR";
         document.getElementById("formNome").value = f.nome;
+        document.getElementById("formTelefone").value = f.telefone || "";
         document.getElementById("formFuncao").value = f.funcao;
         document.getElementById("formPlaca").value = f.placa || "";
         document.getElementById("formVeiculoModelo").value =
           f.veiculoModelo || "";
         document.getElementById("formVeiculoCor").value = f.veiculoCor || "";
         document.getElementById("formAlerta").value = f.alertaAtivo || "";
-        document.getElementById("formObs").value = f.observacao || "";
         document.getElementById("modalCadastro").style.display = "flex";
       }
 
@@ -927,16 +938,16 @@
       }
 
       function exportarExcel() {
-        let csv = "\ufeffVinculo;Nome;Placa;Batidas\n";
+        let csv = "\ufeffVinculo;Nome;Telefone;Placa;Batidas\n";
         dadosFuncionarios.forEach((f) => {
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          csv += `${f.vinculo || "COLABORADOR"};${f.nome};${
+          csv += `${f.vinculo || "COLABORADOR"};${f.nome};${f.telefone || ""};${
             f.placa || ""
           };${m.join(" | ")}\n`;
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-        a.download = `ponto_v4_6_${dataSelecionadaISO}.csv`;
+        a.download = `ponto_v4_7.csv`;
         a.click();
       }
 
@@ -947,26 +958,22 @@
         const rows = dadosFuncionarios.map((f) => [
           f.vinculo || "COLABORADOR",
           f.nome,
-          f.placa || "-",
+          f.telefone || "-",
           (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
         ]);
         doc.autoTable({
-          head: [["Tipo", "Nome", "Placa", "Batidas"]],
+          head: [["Tipo", "Nome", "WhatsApp", "Batidas"]],
           body: rows,
           startY: 20,
         });
-        doc.save(`Relatorio_Pro.pdf`);
+        doc.save(`Relatorio_Ponto_v47.pdf`);
       }
 
       function gerarFolhaIndividual(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text(
-          `Folha de Ponto: ${f.nome} (${f.vinculo || "COLABORADOR"})`,
-          14,
-          15
-        );
+        doc.text(`Folha: ${f.nome}`, 14, 15);
         const hist = f.historico?.[dataSelecionadaISO] || {};
         doc.autoTable({
           head: [["Data", "Ajuste", "Batidas"]],
@@ -988,7 +995,7 @@
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_v4_6.json`;
+        a.download = `backup_v4_7.json`;
         a.click();
       }
 
@@ -1002,7 +1009,7 @@
             (Array.isArray(json) ? json : Object.values(json)).forEach((f) => {
               if (f.id) nodes[f.id] = f;
             });
-            if (confirm("Importar dados?")) db.ref("funcionarios").set(nodes);
+            if (confirm("Importar?")) db.ref("funcionarios").set(nodes);
           } catch (err) {
             alert("Erro!");
           }
