@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.0</title>
+    <title>PONTO PRO v4.1</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -129,7 +129,7 @@
         border-radius: 8px;
       }
       .emp-card.open .smart-details {
-        max-height: 500px;
+        max-height: 600px;
         opacity: 1;
         margin-top: 10px;
         padding: 10px;
@@ -204,9 +204,10 @@
         max-width: 400px;
         padding: 25px;
         border-radius: 20px;
+        overflow-y: auto;
+        max-height: 90vh;
       }
 
-      /* Estilo da Caixinha do Local */
       .local-card {
         background: var(--local-bg);
         border: 2px solid var(--success);
@@ -232,7 +233,7 @@
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.0</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.1</small>
         </h1>
         <input
           type="date"
@@ -283,7 +284,7 @@
           type="text"
           id="searchInput"
           class="search-input"
-          placeholder="🔍 Buscar nome, cargo ou placa..."
+          placeholder="🔍 Buscar nome, cargo, placa ou modelo..."
           oninput="renderizarCards()"
         />
         <div id="cardsContainer"></div>
@@ -291,7 +292,7 @@
 
       <section id="tab-local" class="tab-pane">
         <h3 style="display: flex; align-items: center; gap: 10px">
-          📍 Colaboradores no Local
+          📍 No Local Agora
           <span
             id="countLocal"
             style="
@@ -315,7 +316,7 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Gestão de Dados v4.0</h3>
+        <h3>⚙️ Gestão v4.1</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
@@ -392,20 +393,49 @@
           class="search-input"
           placeholder="Cargo"
         />
-        <input
-          type="text"
-          id="formPlaca"
-          class="search-input"
-          placeholder="Placa (Ex: ABC1234)"
-          oninput="aplicarMascaraPlaca(this)"
-          maxlength="8"
-        />
+
+        <div
+          style="
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+          "
+        >
+          <label
+            style="font-size: 10px; font-weight: bold; color: var(--primary)"
+            >DADOS DO VEÍCULO</label
+          >
+          <input
+            type="text"
+            id="formPlaca"
+            class="search-input"
+            placeholder="Placa (Ex: ABC1234)"
+            oninput="aplicarMascaraPlaca(this)"
+            maxlength="8"
+            style="margin-top: 5px"
+          />
+          <input
+            type="text"
+            id="formVeiculoModelo"
+            class="search-input"
+            placeholder="Marca / Modelo"
+          />
+          <input
+            type="text"
+            id="formVeiculoCor"
+            class="search-input"
+            placeholder="Cor do Veículo"
+          />
+        </div>
+
         <input
           type="text"
           id="formObs"
           class="search-input"
-          placeholder="Observação"
+          placeholder="Observação Geral"
         />
+
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
           <button
@@ -413,7 +443,7 @@
             style="background: var(--primary); color: white"
             onclick="processarFuncionario()"
           >
-            Salvar Dados
+            Salvar
           </button>
         </div>
       </div>
@@ -423,13 +453,13 @@
       <div class="modal-box">
         <h3 id="modalFuncionarioNome">Editar Ponto</h3>
         <p style="font-size: 10px; color: var(--text-sub); margin-bottom: 5px">
-          Digite apenas números (Ex: 080000 para 08:00:00)
+          Digite apenas números para HH:MM:SS
         </p>
         <input
           type="text"
           id="modalMarcacoes"
           class="search-input"
-          placeholder="HH:MM:SS, HH:MM:SS"
+          placeholder="08:00:00, 12:00:00"
           oninput="aplicarMascaraPonto(this)"
         />
         <input type="hidden" id="modalFuncionarioId" />
@@ -508,9 +538,12 @@
                 : m.length % 2 !== 0
                 ? "PENDENTE"
                 : "FECHADO";
+            const infoVeiculo =
+              (f.placa || "") + (f.veiculoModelo || "") + (f.veiculoCor || "");
             return (
               (f.nome.toUpperCase().includes(busca) ||
-                f.funcao.toUpperCase().includes(busca)) &&
+                f.funcao.toUpperCase().includes(busca) ||
+                infoVeiculo.toUpperCase().includes(busca)) &&
               (filtroStatusAtivo === "TODOS" || status === filtroStatusAtivo)
             );
           })
@@ -525,7 +558,7 @@
                 : m.length % 2 !== 0
                 ? "PENDENTE"
                 : "FECHADO";
-            const cor =
+            const corStatus =
               status === "FECHADO"
                 ? "var(--success)"
                 : status === "PENDENTE"
@@ -538,16 +571,20 @@
                 <div><b style="font-size:16px">${f.nome}</b><br><small>${
               f.funcao
             }</small></div>
-                <span class="status-pill" style="background:${cor}">${status}</span>
+                <span class="status-pill" style="background:${corStatus}">${status}</span>
               </div>
               <div class="marcacoes-row">${
                 m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
                 "---"
               }</div>
               <div class="smart-details">
-                <p><strong>Placa:</strong> ${
-                  f.placa || "-"
-                } | <strong>Obs:</strong> ${f.observacao || "-"}</p>
+                <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
+                    <b>🚗 Veículo:</b> ${f.veiculoModelo || "Não informado"} (${
+              f.veiculoCor || "-"
+            })<br>
+                    <b>🎫 Placa:</b> ${f.placa || "-"}<br>
+                    <b>📝 Obs:</b> ${f.observacao || "-"}
+                </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
                   <button class="btn" style="background:#17a2b8; color:white" onclick="event.stopPropagation(); gerarFolhaIndividual('${
                     f.id
@@ -571,15 +608,36 @@
         atualizarDashboard();
       }
 
+      function processarFuncionario() {
+        const id =
+          document.getElementById("editFuncId").value || Date.now().toString();
+        const fExistente = dadosFuncionarios.find((x) => x.id === id);
+        const d = {
+          id: id,
+          nome: document.getElementById("formNome").value.toUpperCase(),
+          funcao: document.getElementById("formFuncao").value.toUpperCase(),
+          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          veiculoModelo: document
+            .getElementById("formVeiculoModelo")
+            .value.toUpperCase(),
+          veiculoCor: document
+            .getElementById("formVeiculoCor")
+            .value.toUpperCase(),
+          observacao: document.getElementById("formObs").value.toUpperCase(),
+          historico: fExistente ? fExistente.historico || {} : {},
+        };
+        db.ref("funcionarios/" + id)
+          .set(d)
+          .then(() => fecharModalCadastro());
+      }
+
       function renderizarPainelPresenca() {
         const p = document.getElementById("presencePanel");
         const c = document.getElementById("countLocal");
         p.innerHTML = "";
         let count = 0;
-
         dadosFuncionarios.forEach((f) => {
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          // Regra: Está no local se o ponto estiver aberto (número ímpar de batidas)
           if (m.length % 2 !== 0) {
             count++;
             p.innerHTML += `
@@ -591,26 +649,6 @@
           }
         });
         c.innerText = count;
-        if (count === 0)
-          p.innerHTML =
-            "<p style='text-align:center; width:100%; opacity:0.5'>Ninguém no local no momento.</p>";
-      }
-
-      function processarFuncionario() {
-        const id =
-          document.getElementById("editFuncId").value || Date.now().toString();
-        const fExistente = dadosFuncionarios.find((x) => x.id === id);
-        const d = {
-          id: id,
-          nome: document.getElementById("formNome").value.toUpperCase(),
-          funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
-          observacao: document.getElementById("formObs").value.toUpperCase(),
-          historico: fExistente ? fExistente.historico || {} : {},
-        };
-        db.ref("funcionarios/" + id)
-          .set(d)
-          .then(() => fecharModalCadastro());
       }
 
       function baterPonto(id) {
@@ -633,7 +671,7 @@
       function validarGestor(cb) {
         const s = localStorage.getItem(PASS_KEY);
         if (!s) {
-          const n = prompt("Crie uma senha de Gestor:");
+          const n = prompt("Crie uma senha:");
           if (n) {
             localStorage.setItem(PASS_KEY, n);
             cb();
@@ -651,6 +689,9 @@
         document.getElementById("formNome").value = f.nome;
         document.getElementById("formFuncao").value = f.funcao;
         document.getElementById("formPlaca").value = f.placa || "";
+        document.getElementById("formVeiculoModelo").value =
+          f.veiculoModelo || "";
+        document.getElementById("formVeiculoCor").value = f.veiculoCor || "";
         document.getElementById("formObs").value = f.observacao || "";
         document.getElementById("tituloCrud").innerText = "Editar Cadastro";
         document.getElementById("modalCadastro").style.display = "flex";
@@ -676,27 +717,6 @@
         db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
           .update({ marcacoes: m, editado: true })
           .then(() => closePontoEditModal());
-      }
-
-      function importarJSON(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const json = JSON.parse(e.target.result);
-            const data = Array.isArray(json) ? json : Object.values(json);
-            if (confirm(`Deseja importar ${data.length} registros?`)) {
-              const nodes = {};
-              data.forEach((f) => {
-                if (f.id) nodes[f.id] = f;
-              });
-              db.ref("funcionarios").set(nodes);
-            }
-          } catch (err) {
-            alert("Erro no JSON");
-          }
-        };
-        reader.readAsText(file);
       }
 
       function abrirModalCadastro() {
@@ -742,7 +762,7 @@
       function gerenciarSenha() {
         const a = prompt("Senha atual:");
         if (a === localStorage.getItem(PASS_KEY)) {
-          const n = prompt("Nova Senha:");
+          const n = prompt("Nova:");
           if (n) localStorage.setItem(PASS_KEY, n);
         }
       }
@@ -765,10 +785,12 @@
       }
 
       function exportarExcel() {
-        let csv = "\ufeffNome;Cargo;Batidas\n";
+        let csv = "\ufeffNome;Cargo;Placa;Modelo;Cor;Batidas\n";
         dadosFuncionarios.forEach((f) => {
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          csv += `${f.nome};${f.funcao};${m.join(" | ")}\n`;
+          csv += `${f.nome};${f.funcao};${f.placa || ""};${
+            f.veiculoModelo || ""
+          };${f.veiculoCor || ""};${m.join(" | ")}\n`;
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
@@ -779,14 +801,15 @@
       function exportarPDFGeral() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF("l", "mm", "a4");
-        doc.text(`Geral - ${dataSelecionadaISO}`, 14, 15);
+        doc.text(`Relatório Geral - ${dataSelecionadaISO}`, 14, 15);
         const rows = dadosFuncionarios.map((f) => [
           f.nome,
           f.funcao,
+          f.placa || "-",
           (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
         ]);
         doc.autoTable({
-          head: [["Nome", "Cargo", "Batidas"]],
+          head: [["Nome", "Cargo", "Placa", "Batidas"]],
           body: rows,
           startY: 20,
         });
@@ -797,7 +820,7 @@
         const f = dadosFuncionarios.find((x) => x.id === id);
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text(`Folha: ${f.nome}`, 14, 15);
+        doc.text(`Folha de Ponto: ${f.nome}`, 14, 15);
         const rows = [
           [
             dataSelecionadaISO,
@@ -814,8 +837,29 @@
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_ponto_v4.json`;
+        a.download = `backup_v4_1.json`;
         a.click();
+      }
+
+      function importarJSON(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target.result);
+            const data = Array.isArray(json) ? json : Object.values(json);
+            if (confirm(`Importar ${data.length} registros?`)) {
+              const nodes = {};
+              data.forEach((f) => {
+                if (f.id) nodes[f.id] = f;
+              });
+              db.ref("funcionarios").set(nodes);
+            }
+          } catch (err) {
+            alert("Erro no JSON");
+          }
+        };
+        reader.readAsText(file);
       }
 
       document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
