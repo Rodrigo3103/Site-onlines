@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>PONTO PRO - Cloud</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+      :root {
+        --primary: #0984e3;
+        --bg-body: #f0f2f5;
+        --bg-card: #ffffff;
+        --text-main: #2d3436;
+        --text-sub: #636e72;
+        --success: #00b894;
+        --warning: #fdcb6e;
+        --danger: #d63031;
+        --border: #dfe6e9;
+        --nav-bg: #ffffff;
+      }
+
+      body.dark-mode {
+        --bg-body: #18191a;
+        --bg-card: #242526;
+        --text-main: #e4e6eb;
+        --text-sub: #b0b3b8;
+        --border: #3a3b3c;
+        --nav-bg: #242526;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        font-family: "Segoe UI", Roboto, sans-serif;
+      }
+
+      body {
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        margin: 0;
+        padding-bottom: 80px;
+        transition: background 0.3s;
+      }
+
+      .app-header {
+        position: sticky;
+        top: 0;
+        background: var(--bg-card);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        z-index: 1000;
+      }
+
+      .container {
+        padding: 15px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      /* DASHBOARD */
+      .dash-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 15px;
+      }
+      .dash-card {
+        background: var(--bg-card);
+        padding: 12px 5px;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        border-bottom: 3px solid var(--border);
+        cursor: pointer;
+      }
+      .dash-card span {
+        display: block;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 2px;
+      }
+
+      /* CARDS */
+      .emp-card {
+        background: var(--bg-card);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        border: 1px solid var(--border);
+      }
+      .emp-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .emp-name {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0;
+        color: var(--primary);
+      }
+      .emp-role {
+        font-size: 12px;
+        color: var(--text-sub);
+        margin: 2px 0;
+      }
+
+      .status-pill {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 900;
+        color: white;
+      }
+
+      .marcacoes-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 12px 0;
+      }
+      .time-tag {
+        background: var(--bg-body);
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: bold;
+        border: 1px solid var(--border);
+      }
+
+      .smart-details {
+        max-height: 0;
+        overflow: hidden;
+        transition: 0.3s ease-out;
+        opacity: 0;
+      }
+      .emp-card.open .smart-details {
+        max-height: 250px;
+        opacity: 1;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border);
+      }
+
+      .btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-weight: bold;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      /* NAV INFERIOR */
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        height: 70px;
+        background: var(--nav-bg);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        z-index: 1000;
+      }
+      .nav-btn {
+        background: none;
+        border: none;
+        color: var(--text-sub);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 10px;
+        gap: 4px;
+      }
+      .nav-btn.active {
+        color: var(--primary);
+      }
+      .nav-btn-main {
+        width: 50px;
+        height: 50px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        margin-top: -30px;
+        box-shadow: 0 4px 12px rgba(9, 132, 227, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        font-size: 24px;
+      }
+
+      .tab-pane {
+        display: none;
+      }
+      .tab-pane.active {
+        display: block;
+        animation: fadeIn 0.3s;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .presence-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+      }
+      .presence-item {
+        background: var(--bg-card);
+        padding: 10px;
+        border-radius: 12px;
+        text-align: center;
+        border: 2px solid var(--border);
+      }
+      .presence-item.active {
+        border-color: var(--success);
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-main);
+        margin-bottom: 15px;
+      }
+
+      /* MODAIS */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        padding: 20px;
+      }
+      .modal-box {
+        background: var(--bg-card);
+        width: 100%;
+        max-width: 400px;
+        padding: 25px;
+        border-radius: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1 style="margin: 0; font-size: 18px">PONTO PRO</h1>
+        <input
+          type="date"
+          id="inputDataFiltro"
+          onchange="atualizarDataFiltro()"
+          style="
+            border: none;
+            background: none;
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: bold;
+          "
+        />
+      </div>
+      <button
+        onclick="toggleDarkMode()"
+        style="background: none; border: none; font-size: 20px"
+      >
+        🌓
+      </button>
+    </header>
+
+    <div class="container">
+      <main id="tab-registros" class="tab-pane active">
+        <div class="dash-grid">
+          <div class="dash-card" onclick="setFiltroStatus('TODOS')">
+            <span id="dashTotal">0</span>Total
+          </div>
+          <div
+            class="dash-card"
+            onclick="setFiltroStatus('FECHADO')"
+            style="border-color: var(--success)"
+          >
+            <span id="dashPresentes">0</span>OK
+          </div>
+          <div
+            class="dash-card"
+            onclick="setFiltroStatus('PENDENTE')"
+            style="border-color: var(--warning)"
+          >
+            <span id="dashPendentes">0</span>Aberto
+          </div>
+          <div class="dash-card" onclick="setFiltroStatus('VAZIO')">
+            <span id="dashVazios">0</span>Falta
+          </div>
+        </div>
+
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="🔍 Buscar nome, cargo ou placa..."
+          oninput="renderizarCards()"
+        />
+        <div id="cardsContainer"></div>
+      </main>
+
+      <section id="tab-local" class="tab-pane">
+        <h3 style="margin-top: 0">📍 No Local Agora</h3>
+        <div class="presence-grid" id="presencePanel"></div>
+      </section>
+
+      <section id="tab-tools" class="tab-pane">
+        <h3>⚙️ Gestão de Dados</h3>
+        <div style="display: grid; gap: 12px">
+          <button
+            class="btn"
+            style="background: #2d3436; color: white"
+            onclick="validarGestor(fazerBackup)"
+          >
+            💾 Exportar Backup (JSON)
+          </button>
+
+          <div
+            style="
+              background: var(--bg-card);
+              padding: 15px;
+              border-radius: 12px;
+              border: 1px dashed var(--primary);
+            "
+          >
+            <p
+              style="
+                margin: 0 0 10px 0;
+                font-size: 12px;
+                font-weight: bold;
+                color: var(--primary);
+              "
+            >
+              📥 IMPORTAR DADOS (JSON)
+            </p>
+            <input
+              type="file"
+              id="importFile"
+              accept=".json"
+              style="font-size: 12px; width: 100%"
+            />
+            <button
+              class="btn"
+              style="
+                background: var(--primary);
+                color: white;
+                margin-top: 10px;
+                width: 100%;
+              "
+              onclick="validarGestor(importarJSON)"
+            >
+              Confirmar Importação
+            </button>
+          </div>
+
+          <button
+            class="btn"
+            style="background: #00b894; color: white"
+            onclick="exportarExcel()"
+          >
+            📊 Planilha Excel
+          </button>
+          <button
+            class="btn"
+            style="background: #d63031; color: white"
+            onclick="exportarPDFGeral()"
+          >
+            📕 PDF Relatório Geral
+          </button>
+          <button
+            class="btn"
+            style="background: #6f42c1; color: white"
+            onclick="gerenciarSenha()"
+          >
+            🔑 Alterar Senha Admin
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" onclick="switchTab('tab-registros', this)">
+        <span>📋</span>Registros
+      </button>
+      <button class="nav-btn-main" onclick="abrirModalCadastro()">＋</button>
+      <button class="nav-btn" onclick="switchTab('tab-local', this)">
+        <span>📍</span>No Local
+      </button>
+      <button class="nav-btn" onclick="switchTab('tab-tools', this)">
+        <span>⚙️</span>Mais
+      </button>
+    </nav>
+
+    <div id="pontoEditModal" class="modal-overlay">
+      <div class="modal-box">
+        <h3 id="modalFuncionarioNome" style="margin-top: 0">Editar Ponto</h3>
+        <input
+          type="text"
+          id="modalMarcacoes"
+          class="search-input"
+          placeholder="08:00, 12:00, 13:00, 17:00"
+        />
+        <input type="hidden" id="modalFuncionarioId" />
+        <div style="display: flex; gap: 10px">
+          <button
+            class="btn"
+            style="background: var(--border)"
+            onclick="closePontoEditModal()"
+          >
+            Cancelar
+          </button>
+          <button
+            class="btn"
+            style="background: var(--success); color: white"
+            onclick="savePontoEditModal()"
+          >
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalCadastro" class="modal-overlay">
+      <div class="modal-box">
+        <h3 id="tituloCrud">Novo Colaborador</h3>
+        <input type="hidden" id="editFuncId" />
+        <input
+          type="text"
+          id="formNome"
+          class="search-input"
+          placeholder="Nome Completo"
+        />
+        <input
+          type="text"
+          id="formFuncao"
+          class="search-input"
+          placeholder="Cargo/Função"
+        />
+        <input
+          type="text"
+          id="formPlaca"
+          class="search-input"
+          placeholder="Placa do Veículo"
+        />
+        <input
+          type="text"
+          id="formObs"
+          class="search-input"
+          placeholder="Observação"
+        />
+        <div style="display: flex; gap: 10px">
+          <button
+            class="btn"
+            style="background: var(--border)"
+            onclick="fecharModalCadastro()"
+          >
+            Cancelar
+          </button>
+          <button
+            class="btn"
+            style="background: var(--primary); color: white"
+            onclick="processarFuncionario()"
+          >
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // CONFIGURAÇÕES FIREBASE (MANTIDAS)
+      const firebaseConfig = {
+        apiKey: "AIzaSyBfcH5K-9sz7WQIZrt7Cb4U39r7vuU6E7Q",
+        authDomain: "espelhodepontoetecvilaformosa.firebaseapp.com",
+        databaseURL:
+          "https://espelhodepontoetecvilaformosa-default-rtdb.firebaseio.com",
+        projectId: "espelhodepontoetecvilaformosa",
+        storageBucket: "espelhodepontoetecvilaformosa.firebasestorage.app",
+        messagingSenderId: "1076635740136",
+        appId: "1:1076635740136:web:567dbfeb482017d532721d",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      let dadosFuncionarios = [];
+      let dataSelecionadaISO = new Date().toISOString().slice(0, 10);
+      let filtroStatusAtivo = "TODOS";
+      const PASS_KEY = "ponto_admin_pass";
+
+      // DATABASE LISTENER
+      db.ref("funcionarios").on("value", (snap) => {
+        const val = snap.val();
+        dadosFuncionarios = val ? Object.values(val) : [];
+        renderizarCards();
+        renderizarPainelPresenca();
+      });
+
+      function renderizarCards() {
+        const container = document.getElementById("cardsContainer");
+        const busca = document
+          .getElementById("searchInput")
+          .value.toUpperCase();
+        container.innerHTML = "";
+
+        let lista = dadosFuncionarios.map((f) => {
+          const h =
+            f.historico && f.historico[dataSelecionadaISO]
+              ? f.historico[dataSelecionadaISO]
+              : { marcacoes: [] };
+          const st =
+            h.marcacoes.length === 0
+              ? "VAZIO"
+              : h.marcacoes.length % 2 !== 0
+              ? "PENDENTE"
+              : "FECHADO";
+          return { ...f, h, status: st };
+        });
+
+        lista = lista.filter(
+          (f) =>
+            (f.nome.includes(busca) ||
+              f.funcao.includes(busca) ||
+              (f.placa && f.placa.includes(busca))) &&
+            (filtroStatusAtivo === "TODOS" || f.status === filtroStatusAtivo)
+        );
+
+        lista.forEach((f) => {
+          const stColor =
+            f.status === "FECHADO"
+              ? "var(--success)"
+              : f.status === "PENDENTE"
+              ? "var(--warning)"
+              : "var(--text-sub)";
+          const marcHTML = f.h.marcacoes
+            .map(
+              (m, i) =>
+                `<span class="time-tag" style="color:${
+                  i % 2 == 0 ? "var(--success)" : "var(--danger)"
+                }">${m.slice(0, 5)}</span>`
+            )
+            .join("");
+
+          container.innerHTML += `
+            <div class="emp-card" onclick="this.classList.toggle('open')">
+              <div class="emp-info">
+                <div>
+                  <h3 class="emp-name">${f.nome}</h3>
+                  <p class="emp-role">${f.funcao} ${
+            f.placa ? "• " + f.placa : ""
+          }</p>
+                </div>
+                <span class="status-pill" style="background:${stColor}">${
+            f.status
+          }</span>
+              </div>
+              <div class="marcacoes-row">${
+                marcHTML || "<small>Sem registros</small>"
+              }</div>
+              
+              <div class="smart-details">
+                <p style="font-size:12px; margin:5px 0;"><strong>Obs:</strong> ${
+                  f.observacao || "-"
+                }</p>
+                <div style="display:flex; gap:5px;">
+                  <button class="btn" style="background:#17a2b8; color:white" onclick="event.stopPropagation(); gerarFolhaIndividual('${
+                    f.id
+                  }')">📄 PDF</button>
+                  <button class="btn" style="background:#007bff; color:white" onclick="event.stopPropagation(); iniciarEdicaoPonto('${
+                    f.id
+                  }')">✏️ Ponto</button>
+                  <button class="btn" style="background:var(--text-sub); color:white" onclick="event.stopPropagation(); iniciarEdicaoCadastro('${
+                    f.id
+                  }')">⚙️ Dados</button>
+                  <button class="btn" style="background:var(--danger); color:white" onclick="event.stopPropagation(); validarGestor(()=>excluirFuncionario('${
+                    f.id
+                  }'))">🗑️</button>
+                </div>
+              </div>
+
+              <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px;" onclick="event.stopPropagation(); baterPonto('${
+                f.id
+              }')">⏱️ REGISTRAR AGORA</button>
+            </div>
+          `;
+        });
+        atualizarDash();
+      }
+
+      // FUNÇÃO DE IMPORTAÇÃO JSON (NOVA)
+      function importarJSON() {
+        const fileInput = document.getElementById("importFile");
+        if (!fileInput.files.length)
+          return alert("Selecione um arquivo JSON primeiro!");
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const json = JSON.parse(e.target.result);
+            if (
+              confirm(
+                `Deseja importar ${
+                  Array.isArray(json) ? json.length : Object.keys(json).length
+                } colaboradores? Isso sobrescreverá dados duplicados.`
+              )
+            ) {
+              const nodes = {};
+              if (Array.isArray(json)) {
+                json.forEach((f) => {
+                  if (f.id) nodes[f.id] = f;
+                });
+              } else {
+                Object.assign(nodes, json);
+              }
+
+              db.ref("funcionarios")
+                .update(nodes)
+                .then(() => alert("Dados importados com sucesso!"))
+                .catch((err) => alert("Erro ao salvar no Firebase: " + err));
+            }
+          } catch (err) {
+            alert("Erro ao ler o arquivo JSON: " + err);
+          }
+        };
+        reader.readAsText(fileInput.files[0]);
+      }
+
+      // LÓGICA DE PONTO E CADASTRO (MANTIDAS)
+      function baterPonto(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        if (!f.historico) f.historico = {};
+        if (!f.historico[dataSelecionadaISO])
+          f.historico[dataSelecionadaISO] = { marcacoes: [] };
+        f.historico[dataSelecionadaISO].marcacoes.push(
+          new Date().toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        );
+        salvarEDraw();
+      }
+
+      function salvarEDraw() {
+        const nodes = {};
+        dadosFuncionarios.forEach((f) => {
+          nodes[f.id] = f;
+        });
+        db.ref("funcionarios").set(nodes);
+      }
+
+      function switchTab(tabId, btn) {
+        document
+          .querySelectorAll(".tab-pane")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(tabId).classList.add("active");
+        btn.classList.add("active");
+      }
+
+      function atualizarDash() {
+        let t = dadosFuncionarios.length,
+          ok = 0,
+          ab = 0,
+          f = 0;
+        dadosFuncionarios.forEach((x) => {
+          const m =
+            x.historico && x.historico[dataSelecionadaISO]
+              ? x.historico[dataSelecionadaISO].marcacoes
+              : [];
+          if (m.length === 0) f++;
+          else if (m.length % 2 !== 0) ab++;
+          else ok++;
+        });
+        document.getElementById("dashTotal").innerText = t;
+        document.getElementById("dashPresentes").innerText = ok;
+        document.getElementById("dashPendentes").innerText = ab;
+        document.getElementById("dashVazios").innerText = f;
+      }
+
+      function renderizarPainelPresenca() {
+        const p = document.getElementById("presencePanel");
+        p.innerHTML = "";
+        dadosFuncionarios.forEach((f) => {
+          const m =
+            f.historico && f.historico[dataSelecionadaISO]
+              ? f.historico[dataSelecionadaISO].marcacoes
+              : [];
+          if (m.length > 0 && m.length % 2 !== 0) {
+            p.innerHTML += `<div class="presence-item active"><div>👷</div><div style="font-size:10px; font-weight:bold;">${
+              f.nome.split(" ")[0]
+            }</div><small style="color:var(--success); font-size:8px;">LOCAL</small></div>`;
+          }
+        });
+      }
+
+      // MODAIS E AUXILIARES
+      function abrirModalCadastro() {
+        document.getElementById("modalCadastro").style.display = "flex";
+        document.getElementById("tituloCrud").innerText = "Novo Cadastro";
+      }
+      function fecharModalCadastro() {
+        document.getElementById("modalCadastro").style.display = "none";
+        document
+          .querySelectorAll("#modalCadastro input")
+          .forEach((i) => (i.value = ""));
+        document.getElementById("editFuncId").value = "";
+      }
+
+      function processarFuncionario() {
+        const id = document.getElementById("editFuncId").value;
+        const d = {
+          id: id || Date.now().toString(),
+          nome: document.getElementById("formNome").value.toUpperCase(),
+          funcao: document.getElementById("formFuncao").value.toUpperCase(),
+          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          observacao: document.getElementById("formObs").value.toUpperCase(),
+        };
+        if (!d.nome) return alert("Nome é obrigatório");
+        db.ref("funcionarios/" + d.id)
+          .update(d)
+          .then(fecharModalCadastro);
+      }
+
+      function iniciarEdicaoCadastro(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        document.getElementById("editFuncId").value = f.id;
+        document.getElementById("formNome").value = f.nome;
+        document.getElementById("formFuncao").value = f.funcao;
+        document.getElementById("formPlaca").value = f.placa;
+        document.getElementById("formObs").value = f.observacao;
+        document.getElementById("tituloCrud").innerText = "Editar Cadastro";
+        document.getElementById("modalCadastro").style.display = "flex";
+      }
+
+      function iniciarEdicaoPonto(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const p =
+          f.historico && f.historico[dataSelecionadaISO]
+            ? f.historico[dataSelecionadaISO].marcacoes
+            : [];
+        document.getElementById("modalFuncionarioId").value = id;
+        document.getElementById("modalFuncionarioNome").innerText = f.nome;
+        document.getElementById("modalMarcacoes").value = p.join(", ");
+        document.getElementById("pontoEditModal").style.display = "flex";
+      }
+
+      function savePontoEditModal() {
+        const id = document.getElementById("modalFuncionarioId").value;
+        const val = document
+          .getElementById("modalMarcacoes")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter((t) => t.length >= 4);
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
+          .update({ marcacoes: val, editado: true })
+          .then(closePontoEditModal);
+      }
+
+      function closePontoEditModal() {
+        document.getElementById("pontoEditModal").style.display = "none";
+      }
+
+      function validarGestor(cb) {
+        const s = localStorage.getItem(PASS_KEY);
+        if (!s) {
+          const n = prompt("Defina uma senha mestre:");
+          if (n) {
+            localStorage.setItem(PASS_KEY, n);
+            cb();
+          }
+        } else {
+          const t = prompt("Senha Admin:");
+          if (t === s) cb();
+          else if (t !== null) alert("Incorreta");
+        }
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark-mode");
+      }
+      function atualizarDataFiltro() {
+        dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
+        renderizarCards();
+      }
+      function setFiltroStatus(s) {
+        filtroStatusAtivo = s;
+        renderizarCards();
+      }
+      function excluirFuncionario(id) {
+        if (confirm("Excluir permanentemente?"))
+          db.ref("funcionarios/" + id).remove();
+      }
+
+      // EXPORTAÇÕES
+      function fazerBackup() {
+        const blob = new Blob([JSON.stringify(dadosFuncionarios, null, 2)], {
+          type: "application/json",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_ponto_${dataSelecionadaISO}.json`;
+        a.click();
+      }
+
+      function exportarExcel() {
+        let csv = "\ufeffNome;Cargo;Batidas;Total\n";
+        dadosFuncionarios.forEach((f) => {
+          const m =
+            f.historico && f.historico[dataSelecionadaISO]
+              ? f.historico[dataSelecionadaISO].marcacoes
+              : [];
+          csv += `${f.nome};${f.funcao};${m.join(" | ")};${formatMs(
+            getMs(m)
+          )}\n`;
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(
+          new Blob([csv], { type: "text/csv;charset=utf-8;" })
+        );
+        link.download = `ponto_${dataSelecionadaISO}.csv`;
+        link.click();
+      }
+
+      function exportarPDFGeral() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("l", "mm", "a4");
+        doc.text(`Relatório Geral de Ponto - ${dataSelecionadaISO}`, 14, 15);
+        const rows = dadosFuncionarios.map((f) => {
+          const m =
+            f.historico && f.historico[dataSelecionadaISO]
+              ? f.historico[dataSelecionadaISO].marcacoes
+              : [];
+          return [f.nome, f.funcao, f.placa, m.join(" | "), formatMs(getMs(m))];
+        });
+        doc.autoTable({
+          head: [["Nome", "Cargo", "Placa", "Batidas", "Total"]],
+          body: rows,
+          startY: 20,
+        });
+        doc.save(`Relatorio_Geral_${dataSelecionadaISO}.pdf`);
+      }
+
+      function gerarFolhaIndividual(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const [ano, mes] = dataSelecionadaISO.split("-");
+        const dias = new Date(ano, mes, 0).getDate();
+        doc.text(`Espelho de Ponto: ${f.nome}`, 105, 15, { align: "center" });
+        const rows = [];
+        let tot = 0;
+        for (let d = 1; d <= dias; d++) {
+          const iso = `${ano}-${mes}-${String(d).padStart(2, "0")}`;
+          const p =
+            f.historico && f.historico[iso]
+              ? f.historico[iso]
+              : { marcacoes: [] };
+          const ms = getMs(p.marcacoes);
+          tot += ms;
+          rows.push([d, p.marcacoes.join(" | ") || "---", formatMs(ms)]);
+        }
+        doc.autoTable({
+          head: [["Dia", "Batidas", "Total"]],
+          body: rows,
+          startY: 30,
+        });
+        doc.text(
+          `TOTAL ACUMULADO NO MÊS: ${formatMs(tot)}`,
+          14,
+          doc.lastAutoTable.finalY + 10
+        );
+        doc.save(`Folha_Individual_${f.nome}.pdf`);
+      }
+
+      function getMs(m) {
+        let t = 0;
+        for (let i = 0; i < m.length; i += 2) {
+          if (m[i + 1]) {
+            const h1 = m[i].split(":"),
+              h2 = m[i + 1].split(":");
+            t +=
+              new Date(2000, 0, 1, h2[0], h2[1]) -
+              new Date(2000, 0, 1, h1[0], h1[1]);
+          }
+        }
+        return t;
+      }
+
+      function formatMs(ms) {
+        let s = Math.floor(ms / 1000),
+          h = Math.floor(s / 3600);
+        s %= 3600;
+        let m = Math.floor(s / 60);
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      }
+
+      function gerenciarSenha() {
+        const s = localStorage.getItem(PASS_KEY);
+        if (prompt("Senha atual:") === s) {
+          const n = prompt("Nova senha:");
+          if (n) localStorage.setItem(PASS_KEY, n);
+        }
+      }
+
+      document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
+    </script>
+  </body>
+</html>
