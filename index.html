@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.9 - Auditoria & Gestão</title>
+    <title>PONTO PRO v4.9</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -276,7 +276,6 @@
         padding: 12px;
         border-radius: 12px;
         text-align: center;
-        margin-bottom: 10px;
       }
       .local-timer {
         font-family: monospace;
@@ -289,20 +288,18 @@
         display: inline-block;
       }
 
+      /* Logs v4.9 */
       .log-item {
         background: var(--bg-body);
-        padding: 10px;
+        padding: 8px;
         border-radius: 8px;
-        margin-bottom: 8px;
-        font-size: 11px;
-        border-left: 4px solid var(--primary);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 5px;
+        font-size: 10px;
+        border-left: 3px solid var(--primary);
       }
       .log-date {
         font-weight: bold;
         color: var(--primary);
-        display: block;
-        margin-bottom: 3px;
       }
     </style>
   </head>
@@ -357,7 +354,7 @@
 
       <section id="tab-local" class="tab-pane">
         <h3 style="display: flex; align-items: center; gap: 10px">
-          📍 No Local Agora
+          📍 Local / Pátio
           <span
             id="countLocal"
             style="
@@ -381,14 +378,14 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas & Segurança</h3>
+        <h3>⚙️ Ferramentas v4.9</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
             style="background: #2d3436; color: white"
             onclick="abrirAuditoria()"
           >
-            📜 Ver Auditoria (Logs)
+            📜 Ver Logs de Auditoria
           </button>
           <button
             class="btn"
@@ -443,26 +440,17 @@
               display: flex;
               justify-content: space-between;
               align-items: center;
-              border-bottom: 1px solid var(--border);
-              margin-bottom: 10px;
-              padding-bottom: 5px;
             "
           >
-            <h4 style="margin: 0">Histórico de Alterações</h4>
+            <h4>Auditoria Recente</h4>
             <button
               onclick="document.getElementById('auditoriaBox').style.display='none'"
-              style="
-                border: none;
-                background: none;
-                color: red;
-                font-weight: bold;
-                cursor: pointer;
-              "
+              style="border: none; background: none; color: red"
             >
-              FECHAR
+              X
             </button>
           </div>
-          <div id="logList" style="max-height: 300px; overflow-y: auto"></div>
+          <div id="logList"></div>
         </div>
       </section>
     </div>
@@ -485,7 +473,7 @@
         <h3 id="tituloCrud">Cadastro</h3>
         <input type="hidden" id="editFuncId" />
         <select id="formVinculo" class="search-input">
-          <option value="COLABORADOR">COLABORADOR</option>
+          <option value="COLABORADOR">COLABORADOR (PROFESSOR)</option>
           <option value="VISITANTE">VISITANTE</option>
           <option value="TERCEIRIZADO">TERCEIRIZADO</option>
         </select>
@@ -630,7 +618,6 @@
           renderizarLogs();
         });
 
-      // Função de Registro de Auditoria
       function registrarLog(msg) {
         const id = Date.now();
         const data = new Date().toLocaleString("pt-BR");
@@ -640,6 +627,7 @@
       function abrirAuditoria() {
         validarGestor(() => {
           document.getElementById("auditoriaBox").style.display = "block";
+          window.scrollTo(0, document.body.scrollHeight);
         });
       }
 
@@ -649,15 +637,14 @@
           .map(
             (l) => `
             <div class="log-item">
-                <span class="log-date">${l.data}</span>
-                ${l.acao}
+                <span class="log-date">[${l.data}]</span><br>${l.acao}
             </div>
         `
           )
           .join("");
       }
 
-      // Máscaras
+      // Funções de Máscara
       function aplicarMascaraTelefone(i) {
         let v = i.value.replace(/\D/g, "");
         if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
@@ -680,13 +667,12 @@
         i.value = f;
       }
 
-      // WhatsApp
+      // WhatsApp & Grupo
       function enviarZapIndividual(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
-        if (!f.telefone) return alert("Sem telefone cadastrado!");
         const msg = f.alertaAtivo
-          ? `Olá ${f.nome}, o seu veículo (${
-              f.placa || "Sem placa"
+          ? `Olá ${f.nome}, o veículo ${f.veiculoModelo || ""} (${
+              f.placa || ""
             }) está com: *${f.alertaAtivo}*.`
           : `Olá ${f.nome}, tudo bem?`;
         window.open(
@@ -700,13 +686,13 @@
 
       function notificarGrupo(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
-        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*NOME:* ${
+        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*PROFESSOR:* ${
           f.nome
         }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
           f.alertaAtivo
-        }\n\n_Registrado via PONTO PRO_`;
+        }\n\n_Mensagem via PONTO PRO v4.9_`;
         navigator.clipboard.writeText(texto).then(() => {
-          alert("Mensagem copiada! Escolha o grupo e cole.");
+          alert("Texto copiado! Escolha o grupo e cole.");
           window.open(
             `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
             "_blank"
@@ -714,20 +700,21 @@
         });
       }
 
-      // CRUD v4.9
+      // CRUD v4.9 com Logs
       function processarFuncionario() {
         const id =
           document.getElementById("editFuncId").value || Date.now().toString();
         const fExistente = dadosFuncionarios.find((x) => x.id === id);
         const nome = document.getElementById("formNome").value.toUpperCase();
+        const placa = document.getElementById("formPlaca").value.toUpperCase();
 
         const d = {
-          id,
+          id: id,
           vinculo: document.getElementById("formVinculo").value,
           nome,
           telefone: document.getElementById("formTelefone").value,
           funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          placa,
           veiculoModelo: document
             .getElementById("formVeiculoModelo")
             .value.toUpperCase(),
@@ -741,18 +728,18 @@
         db.ref("funcionarios/" + id)
           .set(d)
           .then(() => {
-            registrarLog(`Adm ALTEROU/CRIOU dados de: ${nome}`);
+            registrarLog(`Adm alterou dados de: ${nome} (Placa: ${placa})`);
             fecharModalCadastro();
           });
       }
 
       function excluirFuncionario(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
-        if (confirm(`Excluir permanentemente ${f.nome}?`)) {
+        if (confirm(`Deseja excluir ${f.nome}?`)) {
           db.ref("funcionarios/" + id)
             .remove()
             .then(() => {
-              registrarLog(`Adm EXCLUIU o cadastro de: ${f.nome}`);
+              registrarLog(`Adm EXCLUIU o funcionário: ${f.nome}`);
             });
         }
       }
@@ -769,12 +756,13 @@
           .update({ marcacoes: m, editado: true })
           .then(() => {
             registrarLog(
-              `Adm AJUSTOU o ponto de: ${f.nome} no dia ${dataSelecionadaISO}`
+              `Adm AJUSTOU ponto de: ${f.nome} na data ${dataSelecionadaISO}`
             );
             closePontoEditModal();
           });
       }
 
+      // Lógica de Ponto
       function baterPonto(id) {
         const agora = new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
@@ -816,7 +804,7 @@
               f.alertaAtivo ? "has-alert" : ""
             }" onclick="this.classList.toggle('open')">
               <span class="badge-vinculo" style="background:#636e72">${
-                f.vinculo || "COLABORADOR"
+                f.vinculo || "PROFESSOR"
               }</span>
               <div style="display:flex; justify-content:space-between; align-items:center">
                 <div><b>${f.nome}</b><br><small>${f.funcao}</small></div>
@@ -832,7 +820,7 @@
                 m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
                 "---"
               }</div>
-              <div style="display:flex; gap:5px; margin-top:5px">
+              <div style="display:flex; gap:5px">
                 ${
                   f.telefone
                     ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZapIndividual('${f.id}')">📱 Zap</button>`
@@ -864,7 +852,7 @@
               </div>
               <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px" onclick="event.stopPropagation(); baterPonto('${
                 f.id
-              }')">REGISTRAR PONTO</button>
+              }')">REGISTRAR AGORA</button>
             </div>`;
           });
         atualizarDashboard();
@@ -882,9 +870,7 @@
             p.innerHTML += `<div class="local-card">
                 <b>${f.nome}</b><br>
                 <span class="local-timer" data-inicio="${m[0]}">...</span><br>
-                <small style="background:#333;color:white;padding:2px;border-radius:3px">${
-                  f.placa || "S/PLACA"
-                }</small>
+                <small>${f.placa || "S/P"}</small>
             </div>`;
           }
         });
@@ -905,7 +891,6 @@
         });
       }
 
-      // Auxiliares
       function validarGestor(cb) {
         const s = localStorage.getItem(PASS_KEY);
         if (!s) {
@@ -917,7 +902,7 @@
         } else {
           const t = prompt("Senha:");
           if (t === s) cb();
-          else if (t !== null) alert("Senha Incorreta!");
+          else if (t !== null) alert("Erro!");
         }
       }
 
@@ -968,7 +953,6 @@
         dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
         renderizarCards();
       }
-
       function atualizarDashboard() {
         let ok = 0,
           pen = 0,
@@ -1013,7 +997,7 @@
           body: rows,
           startY: 20,
         });
-        doc.save(`Ponto_Geral.pdf`);
+        doc.save(`Ponto_v4_9.pdf`);
       }
 
       function fazerBackup() {
@@ -1028,7 +1012,7 @@
         );
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_completo.json`;
+        a.download = `backup_full_v4_9.json`;
         a.click();
       }
 
@@ -1038,11 +1022,7 @@
         reader.onload = (e) => {
           try {
             const json = JSON.parse(e.target.result);
-            if (
-              confirm(
-                "Deseja importar todos os dados? Isso substituirá os dados atuais."
-              )
-            )
+            if (confirm("Deseja importar todos os dados e logs?"))
               db.ref("/").update(json);
           } catch (err) {
             alert("Arquivo inválido!");
