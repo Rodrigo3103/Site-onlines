@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.9 - RELATÓRIO INDIVIDUAL</title>
+    <title>PONTO PRO v4.9</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -67,7 +67,6 @@
         max-width: 800px;
         margin: 0 auto;
       }
-
       .dash-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -87,7 +86,6 @@
         font-size: 18px;
         font-weight: bold;
       }
-
       .search-input {
         width: 100%;
         padding: 12px;
@@ -383,9 +381,9 @@
           <button
             class="btn"
             style="background: #6c5ce7; color: white"
-            onclick="validarGestor(abrirModalAlterarSenha)"
+            onclick="validarGestor(abrirGerenciadorSenha)"
           >
-            🔑 Alterar Senha Admin
+            🔑 Gerenciar Senha Admin
           </button>
           <button
             class="btn"
@@ -441,6 +439,21 @@
             border: 1px solid var(--border);
           "
         >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <h4>Auditoria Recente</h4>
+            <button
+              onclick="document.getElementById('auditoriaBox').style.display='none'"
+              style="border: none; background: none; color: red"
+            >
+              X
+            </button>
+          </div>
           <div id="logList"></div>
         </div>
       </section>
@@ -478,7 +491,7 @@
           type="text"
           id="formTelefone"
           class="search-input"
-          placeholder="WhatsApp"
+          placeholder="WhatsApp (DDD) 90000-0000"
           oninput="aplicarMascaraTelefone(this)"
         />
         <input
@@ -487,33 +500,59 @@
           class="search-input"
           placeholder="Cargo / Setor"
         />
-        <input
-          type="text"
-          id="formPlaca"
-          class="search-input"
-          placeholder="Placa"
-          oninput="aplicarMascaraPlaca(this)"
-          maxlength="8"
-        />
-        <input
-          type="text"
-          id="formVeiculoModelo"
-          class="search-input"
-          placeholder="Modelo"
-        />
-        <input
-          type="text"
-          id="formVeiculoCor"
-          class="search-input"
-          placeholder="Cor"
-        />
-        <select id="formAlerta" class="search-input">
-          <option value="">NENHUM</option>
-          <option value="FAROL ACESO">💡 FAROL ACESO</option>
-          <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
-          <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
-          <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
-        </select>
+        <div
+          style="
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+          "
+        >
+          <input
+            type="text"
+            id="formPlaca"
+            class="search-input"
+            placeholder="Placa"
+            oninput="aplicarMascaraPlaca(this)"
+            maxlength="8"
+          />
+          <input
+            type="text"
+            id="formVeiculoModelo"
+            class="search-input"
+            placeholder="Modelo do Veículo"
+          />
+          <input
+            type="text"
+            id="formVeiculoCor"
+            class="search-input"
+            placeholder="Cor"
+          />
+        </div>
+        <div
+          style="
+            border: 1px solid var(--alert-color);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+          "
+        >
+          <label
+            style="
+              font-size: 10px;
+              font-weight: bold;
+              color: var(--alert-color);
+            "
+            >⚠️ STATUS DE ALERTA</label
+          >
+          <select id="formAlerta" class="search-input" style="margin-top: 5px">
+            <option value="">NENHUM</option>
+            <option value="FAROL ACESO">💡 FAROL ACESO</option>
+            <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
+            <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
+            <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
+          </select>
+        </div>
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
           <button
@@ -529,7 +568,7 @@
 
     <div id="pontoEditModal">
       <div class="modal-box">
-        <h3>Ajustar Horários</h3>
+        <h3 id="modalFuncionarioNome">Ajustar Horários</h3>
         <input
           type="text"
           id="modalMarcacoes"
@@ -537,7 +576,7 @@
           oninput="aplicarMascaraPonto(this)"
         />
         <input type="hidden" id="modalFuncionarioId" />
-        <div style="display: flex; gap: 10px">
+        <div style="display: flex; gap: 10px; margin-top: 20px">
           <button class="btn" onclick="closePontoEditModal()">Sair</button>
           <button
             class="btn"
@@ -552,7 +591,10 @@
 
     <div id="modalSenha">
       <div class="modal-box">
-        <h3>Alterar Senha Admin</h3>
+        <h3>Gerenciar Senha Admin</h3>
+        <p style="font-size: 11px; color: var(--text-sub)">
+          Defina uma nova senha para acesso às ferramentas restritas.
+        </p>
         <input
           type="password"
           id="inputNovaSenha"
@@ -560,13 +602,18 @@
           placeholder="Nova Senha"
         />
         <div style="display: flex; gap: 10px">
-          <button class="btn" onclick="fecharModalSenha()">Cancelar</button>
+          <button
+            class="btn"
+            onclick="document.getElementById('modalSenha').style.display='none'"
+          >
+            Cancelar
+          </button>
           <button
             class="btn"
             style="background: var(--success); color: white"
             onclick="salvarNovaSenha()"
           >
-            Salvar
+            Salvar Senha
           </button>
         </div>
       </div>
@@ -610,6 +657,185 @@
         db.ref(`auditoria/${id}`).set({ data, acao: msg });
       }
 
+      function abrirGerenciadorSenha() {
+        document.getElementById("modalSenha").style.display = "flex";
+      }
+      function salvarNovaSenha() {
+        const nova = document.getElementById("inputNovaSenha").value;
+        if (nova) {
+          localStorage.setItem(PASS_KEY, nova);
+          alert("Senha alterada com sucesso!");
+          document.getElementById("modalSenha").style.display = "none";
+        }
+      }
+
+      function abrirAuditoria() {
+        validarGestor(() => {
+          document.getElementById("auditoriaBox").style.display = "block";
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+      }
+
+      function renderizarLogs() {
+        const list = document.getElementById("logList");
+        list.innerHTML = logsAuditoria
+          .map(
+            (l) =>
+              `<div class="log-item"><span class="log-date">[${l.data}]</span><br>${l.acao}</div>`
+          )
+          .join("");
+      }
+
+      function aplicarMascaraTelefone(i) {
+        let v = i.value.replace(/\D/g, "");
+        if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
+        if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
+        i.value = v;
+      }
+      function aplicarMascaraPlaca(i) {
+        let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
+        i.value = v;
+      }
+      function aplicarMascaraPonto(i) {
+        let v = i.value.replace(/\D/g, "");
+        let f = "";
+        for (let j = 0; j < v.length; j++) {
+          if (j > 0 && j % 6 === 0) f += ", ";
+          else if (j > 0 && j % 2 === 0 && j % 6 !== 0) f += ":";
+          f += v[j];
+        }
+        i.value = f;
+      }
+
+      function enviarZapIndividual(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const msg = f.alertaAtivo
+          ? `Olá ${f.nome}, o veículo ${f.veiculoModelo || ""} (${
+              f.placa || ""
+            }) está com: *${f.alertaAtivo}*.`
+          : `Olá ${f.nome}, tudo bem?`;
+        window.open(
+          `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
+            /\D/g,
+            ""
+          )}&text=${encodeURIComponent(msg)}`,
+          "_blank"
+        );
+      }
+
+      function notificarGrupo(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*PROFESSOR:* ${
+          f.nome
+        }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
+          f.alertaAtivo
+        }\n\n_Mensagem via PONTO PRO v4.9_`;
+        navigator.clipboard.writeText(texto).then(() => {
+          alert("Texto copiado! Escolha o grupo e cole.");
+          window.open(
+            `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
+            "_blank"
+          );
+        });
+      }
+
+      function processarFuncionario() {
+        const id =
+          document.getElementById("editFuncId").value || Date.now().toString();
+        const fExistente = dadosFuncionarios.find((x) => x.id === id);
+        const nome = document.getElementById("formNome").value.toUpperCase();
+        const d = {
+          id: id,
+          vinculo: document.getElementById("formVinculo").value,
+          nome,
+          telefone: document.getElementById("formTelefone").value,
+          funcao: document.getElementById("formFuncao").value.toUpperCase(),
+          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          veiculoModelo: document
+            .getElementById("formVeiculoModelo")
+            .value.toUpperCase(),
+          veiculoCor: document
+            .getElementById("formVeiculoCor")
+            .value.toUpperCase(),
+          alertaAtivo: document.getElementById("formAlerta").value,
+          historico: fExistente ? fExistente.historico || {} : {},
+        };
+        db.ref("funcionarios/" + id)
+          .set(d)
+          .then(() => {
+            registrarLog(`Adm alterou dados de: ${nome}`);
+            fecharModalCadastro();
+          });
+      }
+
+      function excluirFuncionario(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        if (confirm(`Deseja excluir ${f.nome}?`)) {
+          db.ref("funcionarios/" + id)
+            .remove()
+            .then(() => {
+              registrarLog(`Adm EXCLUIU o funcionário: ${f.nome}`);
+            });
+        }
+      }
+
+      function savePontoEditModal() {
+        const id = document.getElementById("modalFuncionarioId").value;
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const m = document
+          .getElementById("modalMarcacoes")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter((t) => t);
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
+          .update({ marcacoes: m, editado: true })
+          .then(() => {
+            registrarLog(
+              `Adm AJUSTOU ponto de: ${f.nome} em ${dataSelecionadaISO}`
+            );
+            closePontoEditModal();
+          });
+      }
+
+      function baterPonto(id) {
+        const agora = new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
+          .get()
+          .then((s) => {
+            let m = s.val() || [];
+            m.push(agora);
+            db.ref(
+              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
+            ).set(m);
+          });
+      }
+
+      function exportarPDFIndividual(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`Espelho de Ponto: ${f.nome}`, 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Cargo: ${f.funcao} | Placa: ${f.placa || "-"}`, 14, 22);
+
+        const hist = f.historico || {};
+        const rows = Object.keys(hist)
+          .sort()
+          .reverse()
+          .map((data) => [
+            data.split("-").reverse().join("/"),
+            hist[data].marcacoes.join(" | "),
+          ]);
+
+        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 30 });
+        doc.save(`Ponto_${f.nome}.pdf`);
+      }
+
       function renderizarCards() {
         const container = document.getElementById("cardsContainer");
         const busca = document
@@ -645,7 +871,7 @@
                     : "var(--text-sub)"
                 }">${status}</span>
               </div>
-              <div style="margin:8px 0">${
+              <div class="marcacoes-row">${
                 m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
                 "---"
               }</div>
@@ -667,12 +893,10 @@
                       f.veiculoModelo || "-"
                     } | <b>🎫 Placa:</b> ${f.placa || "-"}
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr; gap:8px; margin-bottom:8px">
-                  <button class="btn" style="background:#3498db; color:white" onclick="event.stopPropagation(); gerarRelatorioIndividual('${
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
+                  <button class="btn" style="background:#3498db; color:white" onclick="event.stopPropagation(); exportarPDFIndividual('${
                     f.id
-                  }')">📄 Relatório Individual</button>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px">
+                  }')">📄 PDF Individual</button>
                   <button class="btn" style="background:#007bff; color:white" onclick="event.stopPropagation(); iniciarEdicaoPonto('${
                     f.id
                   }')">✏️ Ponto</button>
@@ -690,61 +914,6 @@
             </div>`;
           });
         atualizarDashboard();
-      }
-
-      /* NOVA FUNÇÃO: RELATÓRIO INDIVIDUAL */
-      function gerarRelatorioIndividual(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        doc.setFontSize(18);
-        doc.text("RELATÓRIO INDIVIDUAL DE PONTO", 105, 20, { align: "center" });
-
-        doc.setFontSize(12);
-        doc.text(`Funcionário: ${f.nome}`, 20, 35);
-        doc.text(`Cargo/Função: ${f.funcao || "---"}`, 20, 42);
-        doc.text(`Placa: ${f.placa || "---"}`, 20, 49);
-        doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 20, 56);
-
-        const historico = f.historico || {};
-        const rows = Object.keys(historico)
-          .sort()
-          .reverse()
-          .map((data) => [
-            data.split("-").reverse().join("/"),
-            historico[data].marcacoes
-              ? historico[data].marcacoes.join(" | ")
-              : "Sem registros",
-          ]);
-
-        doc.autoTable({
-          head: [["Data", "Batidas de Ponto"]],
-          body: rows,
-          startY: 65,
-          theme: "grid",
-          headStyles: { fillColor: [9, 132, 227] },
-        });
-
-        doc.save(`Ponto_${f.nome.replace(/\s+/g, "_")}.pdf`);
-      }
-
-      /* TODAS AS FUNÇÕES ANTERIORES MANTIDAS INTEGRALMENTE */
-      function baterPonto(id) {
-        const agora = new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
-          .get()
-          .then((s) => {
-            let m = s.val() || [];
-            m.push(agora);
-            db.ref(
-              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
-            ).set(m);
-          });
       }
 
       function renderizarPainelPresenca() {
@@ -781,32 +950,10 @@
       }
 
       function validarGestor(cb) {
-        const s = localStorage.getItem(PASS_KEY);
-        if (!s) {
-          const n = prompt("Defina senha Admin:");
-          if (n) {
-            localStorage.setItem(PASS_KEY, n);
-            cb();
-          }
-        } else {
-          const t = prompt("Senha:");
-          if (t === s) cb();
-          else if (t !== null) alert("Erro!");
-        }
-      }
-
-      function abrirModalAlterarSenha() {
-        document.getElementById("modalSenha").style.display = "flex";
-      }
-      function fecharModalSenha() {
-        document.getElementById("modalSenha").style.display = "none";
-      }
-      function salvarNovaSenha() {
-        const nova = document.getElementById("inputNovaSenha").value;
-        if (nova.trim().length < 1) return;
-        localStorage.setItem(PASS_KEY, nova);
-        alert("Senha alterada!");
-        fecharModalSenha();
+        const s = localStorage.getItem(PASS_KEY) || "1234";
+        const t = prompt("Senha Admin:");
+        if (t === s) cb();
+        else if (t !== null) alert("Senha Incorreta!");
       }
 
       function iniciarEdicaoCadastro(id) {
@@ -822,83 +969,22 @@
       function iniciarEdicaoPonto(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
         document.getElementById("modalFuncionarioId").value = id;
+        document.getElementById("modalFuncionarioNome").innerText = f.nome;
         document.getElementById("modalMarcacoes").value = (
           f.historico?.[dataSelecionadaISO]?.marcacoes || []
         ).join(", ");
         document.getElementById("pontoEditModal").style.display = "flex";
       }
 
-      function processarFuncionario() {
-        const id =
-          document.getElementById("editFuncId").value || Date.now().toString();
-        const fExistente = dadosFuncionarios.find((x) => x.id === id);
-        const d = {
-          id: id,
-          vinculo: document.getElementById("formVinculo").value,
-          nome: document.getElementById("formNome").value.toUpperCase(),
-          telefone: document.getElementById("formTelefone").value,
-          funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
-          veiculoModelo: document
-            .getElementById("formVeiculoModelo")
-            .value.toUpperCase(),
-          veiculoCor: document
-            .getElementById("formVeiculoCor")
-            .value.toUpperCase(),
-          alertaAtivo: document.getElementById("formAlerta").value,
-          historico: fExistente ? fExistente.historico || {} : {},
-        };
-        db.ref("funcionarios/" + id)
-          .set(d)
-          .then(() => fecharModalCadastro());
-      }
-
-      function excluirFuncionario(id) {
-        if (confirm("Deseja excluir?")) db.ref("funcionarios/" + id).remove();
-      }
-
-      function savePontoEditModal() {
-        const id = document.getElementById("modalFuncionarioId").value;
-        const m = document
-          .getElementById("modalMarcacoes")
-          .value.split(",")
-          .map((t) => t.trim())
-          .filter((t) => t);
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
-          .update({ marcacoes: m })
-          .then(() => closePontoEditModal());
-      }
-
-      function aplicarMascaraTelefone(i) {
-        let v = i.value.replace(/\D/g, "");
-        if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
-        if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
-        i.value = v;
-      }
-      function aplicarMascaraPlaca(i) {
-        let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-        if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
-        i.value = v;
-      }
-      function aplicarMascaraPonto(i) {
-        let v = i.value.replace(/\D/g, "");
-        let f = "";
-        for (let j = 0; j < v.length; j++) {
-          if (j > 0 && j % 6 === 0) f += ", ";
-          else if (j > 0 && j % 2 === 0 && j % 6 !== 0) f += ":";
-          f += v[j];
-        }
-        i.value = f;
+      function abrirModalCadastro() {
+        document.getElementById("editFuncId").value = "";
+        document.getElementById("modalCadastro").style.display = "flex";
       }
       function fecharModalCadastro() {
         document.getElementById("modalCadastro").style.display = "none";
       }
       function closePontoEditModal() {
         document.getElementById("pontoEditModal").style.display = "none";
-      }
-      function abrirModalCadastro() {
-        document.getElementById("editFuncId").value = "";
-        document.getElementById("modalCadastro").style.display = "flex";
       }
       function switchTab(id, btn) {
         document
@@ -917,6 +1003,7 @@
         dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
         renderizarCards();
       }
+
       function atualizarDashboard() {
         let ok = 0,
           pen = 0,
@@ -933,6 +1020,7 @@
         document.getElementById("dashPendentes").innerText = pen;
         document.getElementById("dashVazios").innerText = vaz;
       }
+
       function exportarExcel() {
         let csv = "\ufeffNome;Placa;Batidas\n";
         dadosFuncionarios.forEach((f) => {
@@ -942,13 +1030,14 @@
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-        a.download = `ponto.csv`;
+        a.download = `ponto_${dataSelecionadaISO}.csv`;
         a.click();
       }
+
       function exportarPDFGeral() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF("l");
-        doc.text(`Relatório - ${dataSelecionadaISO}`, 14, 15);
+        doc.text(`Relatório Geral - ${dataSelecionadaISO}`, 14, 15);
         const rows = dadosFuncionarios.map((f) => [
           f.nome,
           f.placa || "-",
@@ -959,8 +1048,9 @@
           body: rows,
           startY: 20,
         });
-        doc.save(`Ponto_Geral.pdf`);
+        doc.save(`Ponto_Geral_${dataSelecionadaISO}.pdf`);
       }
+
       function fazerBackup() {
         const b = new Blob(
           [
@@ -973,22 +1063,25 @@
         );
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup.json`;
+        a.download = `backup_ponto_pro.json`;
         a.click();
       }
+
       function importarJSON(event) {
         const file = event.target.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
             const json = JSON.parse(e.target.result);
-            db.ref("/").update(json);
+            if (confirm("Importar dados? Isso substituirá a base atual."))
+              db.ref("/").update(json);
           } catch (err) {
-            alert("Erro!");
+            alert("Arquivo inválido!");
           }
         };
         reader.readAsText(file);
       }
+
       setInterval(atualizarCronometros, 1000);
       document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
     </script>
