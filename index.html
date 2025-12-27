@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.7</title>
+    <title>PONTO PRO v4.8</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -107,12 +107,6 @@
         position: relative;
         transition: 0.3s;
       }
-      .emp-card.tipo-visitante {
-        border-left: 5px solid var(--visitor-blue);
-      }
-      .emp-card.tipo-terceirizado {
-        border-left: 5px solid #9b59b6;
-      }
       .emp-card.has-alert {
         border: 2px solid var(--alert-color);
         animation: pulseAlert 2s infinite;
@@ -169,6 +163,19 @@
         cursor: pointer;
         text-decoration: none;
         width: fit-content;
+      }
+      .btn-group-alert {
+        background: #d63031;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
         margin-top: 5px;
       }
 
@@ -181,7 +188,7 @@
         border-radius: 8px;
       }
       .emp-card.open .smart-details {
-        max-height: 900px;
+        max-height: 1000px;
         opacity: 1;
         margin-top: 10px;
         padding: 10px;
@@ -271,9 +278,6 @@
         border-radius: 12px;
         text-align: center;
       }
-      .local-card.visitante {
-        border-color: var(--visitor-blue);
-      }
       .local-timer {
         font-family: monospace;
         background: var(--success);
@@ -290,7 +294,7 @@
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.7</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.8</small>
         </h1>
         <input
           type="date"
@@ -316,26 +320,14 @@
     <div class="container">
       <main id="tab-registros" class="tab-pane active">
         <div class="dash-grid">
-          <div class="dash-card" onclick="setFiltroStatus('TODOS')">
-            <span id="dashTotal">0</span>Total
-          </div>
-          <div
-            class="dash-card"
-            onclick="setFiltroStatus('FECHADO')"
-            style="border-color: var(--success)"
-          >
+          <div class="dash-card"><span id="dashTotal">0</span>Total</div>
+          <div class="dash-card" style="border-color: var(--success)">
             <span id="dashPresentes">0</span>OK
           </div>
-          <div
-            class="dash-card"
-            onclick="setFiltroStatus('PENDENTE')"
-            style="border-color: var(--warning)"
-          >
+          <div class="dash-card" style="border-color: var(--warning)">
             <span id="dashPendentes">0</span>Abertos
           </div>
-          <div class="dash-card" onclick="setFiltroStatus('VAZIO')">
-            <span id="dashVazios">0</span>Faltas
-          </div>
+          <div class="dash-card"><span id="dashVazios">0</span>Faltas</div>
         </div>
         <input
           type="text"
@@ -349,7 +341,7 @@
 
       <section id="tab-local" class="tab-pane">
         <h3 style="display: flex; align-items: center; gap: 10px">
-          📍 Gestão de Pátio
+          📍 Local / Pátio
           <span
             id="countLocal"
             style="
@@ -373,7 +365,7 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas v4.7</h3>
+        <h3>⚙️ Ferramentas v4.8</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
@@ -410,13 +402,6 @@
           >
             📕 PDF Geral
           </button>
-          <button
-            class="btn"
-            style="background: #6f42c1; color: white"
-            onclick="gerenciarSenha()"
-          >
-            🔑 Senha Master
-          </button>
         </div>
       </section>
     </div>
@@ -438,18 +423,16 @@
       <div class="modal-box">
         <h3 id="tituloCrud">Cadastro</h3>
         <input type="hidden" id="editFuncId" />
-
         <select id="formVinculo" class="search-input">
-          <option value="COLABORADOR">COLABORADOR</option>
+          <option value="COLABORADOR">COLABORADOR (PROFESSOR)</option>
           <option value="VISITANTE">VISITANTE</option>
           <option value="TERCEIRIZADO">TERCEIRIZADO</option>
         </select>
-
         <input
           type="text"
           id="formNome"
           class="search-input"
-          placeholder="Nome / Empresa"
+          placeholder="Nome Completo"
         />
         <input
           type="text"
@@ -464,7 +447,6 @@
           class="search-input"
           placeholder="Cargo / Setor"
         />
-
         <div
           style="
             border: 1px solid var(--border);
@@ -473,10 +455,6 @@
             margin-bottom: 15px;
           "
         >
-          <label
-            style="font-size: 10px; font-weight: bold; color: var(--primary)"
-            >VEÍCULO</label
-          >
           <input
             type="text"
             id="formPlaca"
@@ -489,7 +467,7 @@
             type="text"
             id="formVeiculoModelo"
             class="search-input"
-            placeholder="Modelo"
+            placeholder="Modelo do Veículo"
           />
           <input
             type="text"
@@ -498,7 +476,6 @@
             placeholder="Cor"
           />
         </div>
-
         <div
           style="
             border: 1px solid var(--alert-color);
@@ -513,19 +490,19 @@
               font-weight: bold;
               color: var(--alert-color);
             "
-            >⚠️ ALERTA DE PÁTIO</label
+            >⚠️ STATUS DE ALERTA</label
           >
           <select id="formAlerta" class="search-input" style="margin-top: 5px">
             <option value="">NENHUM</option>
             <option value="FAROL ACESO">💡 FAROL ACESO</option>
             <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
             <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
+            <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
             <option value="IR À GERÊNCIA">🏢 IR À GERÊNCIA</option>
           </select>
         </div>
-
         <div style="display: flex; gap: 10px">
-          <button class="btn" onclick="fecharModalCadastro()">Sair</button>
+          <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
           <button
             class="btn"
             style="background: var(--primary); color: white"
@@ -539,7 +516,7 @@
 
     <div id="pontoEditModal">
       <div class="modal-box">
-        <h3 id="modalFuncionarioNome">Ajustar Ponto</h3>
+        <h3 id="modalFuncionarioNome">Ajustar Horários</h3>
         <input
           type="text"
           id="modalMarcacoes"
@@ -548,7 +525,7 @@
         />
         <input type="hidden" id="modalFuncionarioId" />
         <div style="display: flex; gap: 10px; margin-top: 20px">
-          <button class="btn" onclick="closePontoEditModal()">Cancelar</button>
+          <button class="btn" onclick="closePontoEditModal()">Sair</button>
           <button
             class="btn"
             style="background: var(--success); color: white"
@@ -612,22 +589,50 @@
         i.value = f;
       }
 
-      function enviarZap(id) {
+      function enviarZapIndividual(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
         if (!f.telefone) return alert("WhatsApp não cadastrado!");
-        const num = f.telefone.replace(/\D/g, "");
-        let msg = `Olá ${f.nome}, tudo bem? Mensagem do PONTO PRO.`;
-        if (f.alertaAtivo) {
-          msg = `Olá ${f.nome}, notamos pelo sistema que seu veículo ${
-            f.veiculoModelo || ""
-          } (${f.placa || ""}) está com: *${f.alertaAtivo}* no pátio.`;
-        }
+        const msg = f.alertaAtivo
+          ? `Olá ${f.nome}, notamos pelo sistema que seu veículo ${
+              f.veiculoModelo || ""
+            } (${f.placa || ""}) está com: *${f.alertaAtivo}* no pátio.`
+          : `Olá ${f.nome}, tudo bem?`;
         window.open(
-          `https://api.whatsapp.com/send?phone=55${num}&text=${encodeURIComponent(
-            msg
-          )}`,
+          `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
+            /\D/g,
+            ""
+          )}&text=${encodeURIComponent(msg)}`,
           "_blank"
         );
+      }
+
+      // NOVIDADE v4.8: Notificar Grupo
+      function notificarGrupo(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*PROFESSOR:* ${
+          f.nome
+        }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
+          f.alertaAtivo
+        }\n\n_Mensagem via PONTO PRO_`;
+
+        // Copia para o teclado
+        navigator.clipboard
+          .writeText(texto)
+          .then(() => {
+            alert(
+              "Texto da ocorrência copiado! Agora escolha o grupo no WhatsApp e cole (Ctrl+V)."
+            );
+            window.open(
+              `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
+              "_blank"
+            );
+          })
+          .catch(() => {
+            window.open(
+              `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
+              "_blank"
+            );
+          });
       }
 
       function renderizarCards() {
@@ -644,8 +649,7 @@
               .includes(busca);
           })
           .forEach((f) => {
-            const histDia = f.historico?.[dataSelecionadaISO] || {};
-            const m = histDia.marcacoes || [];
+            const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
             const status =
               m.length === 0
                 ? "VAZIO"
@@ -653,15 +657,9 @@
                 ? "PENDENTE"
                 : "FECHADO";
             const vinculo = f.vinculo || "COLABORADOR";
-            const classeTipo =
-              vinculo === "VISITANTE"
-                ? "tipo-visitante"
-                : vinculo === "TERCEIRIZADO"
-                ? "tipo-terceirizado"
-                : "";
 
             container.innerHTML += `
-            <div class="emp-card ${classeTipo} ${
+            <div class="emp-card ${
               f.alertaAtivo ? "has-alert" : ""
             }" onclick="this.classList.toggle('open')">
               <span class="badge-vinculo" style="background:${
@@ -689,24 +687,31 @@
                   "---"
                 }
               </div>
-              <div style="display:flex; gap:10px; align-items:center">
+              
+              <div style="display:flex; flex-wrap:wrap; gap:8px">
                 ${
                   f.telefone
-                    ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZap('${f.id}')"><span>📱</span> WhatsApp</button>`
+                    ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZapIndividual('${f.id}')">📱 WhatsApp</button>`
                     : ""
                 }
                 ${
                   f.alertaAtivo
-                    ? `<span class="alert-msg">⚠️ ${f.alertaAtivo}</span>`
+                    ? `<button class="btn-group-alert" onclick="event.stopPropagation(); notificarGrupo('${f.id}')">🚨 Notificar Grupo</button>`
                     : ""
                 }
               </div>
+
               <div class="smart-details">
                 <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
                     <b>🚗 Veículo:</b> ${
                       f.veiculoModelo || "-"
                     } | <b>🎫 Placa:</b> ${f.placa || "-"}<br>
-                    <b>📞 Tel:</b> ${f.telefone || "Não cadastrado"}
+                    <b>📞 WhatsApp:</b> ${f.telefone || "---"}<br>
+                    ${
+                      f.alertaAtivo
+                        ? `<b style="color:var(--alert-color)">ALERTA ATUAL: ${f.alertaAtivo}</b>`
+                        : ""
+                    }
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
                   <button class="btn" style="background:#17a2b8; color:white" onclick="event.stopPropagation(); gerarFolhaIndividual('${
@@ -725,7 +730,7 @@
               </div>
               <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px" onclick="event.stopPropagation(); baterPonto('${
                 f.id
-              }')">REGISTRAR PONTO</button>
+              }')">REGISTRAR ENTRADA/SAÍDA</button>
             </div>`;
           });
         atualizarDashboard();
@@ -741,25 +746,19 @@
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
           if (m.length % 2 !== 0) {
             count++;
-            const isVis =
-              f.vinculo === "VISITANTE" || f.vinculo === "TERCEIRIZADO";
             p.innerHTML += `
-              <div class="local-card ${isVis ? "visitante" : ""} ${
-              f.alertaAtivo ? "has-alert" : ""
-            }">
-                <small style="font-weight:bold; color:var(--text-sub)">${
-                  f.vinculo || "COLABORADOR"
-                }</small>
+              <div class="local-card ${f.alertaAtivo ? "has-alert" : ""}">
+                <small>${f.vinculo || "PROFESSOR"}</small>
                 <b style="display:block">${f.nome}</b>
                 <span class="local-timer" data-inicio="${m[0]}">...</span>
                 <div style="font-size:10px; margin-top:8px; border-top:1px dashed #ccc; padding-top:5px">
                    <span style="background:#333;color:white;padding:1px 4px;border-radius:3px">${
                      f.placa || "S/P"
-                   }</span>
+                   }</span><br>
                    ${
-                     f.telefone
-                       ? `<br><a href="#" onclick="enviarZap('${f.id}')" style="color:var(--whatsapp); text-decoration:none; font-weight:bold">CHAMAR ZAP</a>`
-                       : ""
+                     f.alertaAtivo
+                       ? `<a href="#" onclick="notificarGrupo('${f.id}')" style="color:red; font-weight:bold; text-decoration:none">🚨 NOTIFICAR GRUPO</a>`
+                       : `<span>${f.veiculoModelo || "-"}</span>`
                    }
                 </div>
               </div>`;
@@ -912,13 +911,6 @@
       function closePontoEditModal() {
         document.getElementById("pontoEditModal").style.display = "none";
       }
-      function gerenciarSenha() {
-        const a = prompt("Senha atual:");
-        if (a === localStorage.getItem(PASS_KEY)) {
-          const n = prompt("Nova:");
-          if (n) localStorage.setItem(PASS_KEY, n);
-        }
-      }
 
       function atualizarDashboard() {
         let ok = 0,
@@ -938,16 +930,16 @@
       }
 
       function exportarExcel() {
-        let csv = "\ufeffVinculo;Nome;Telefone;Placa;Batidas\n";
+        let csv = "\ufeffVinculo;Nome;WhatsApp;Placa;Batidas\n";
         dadosFuncionarios.forEach((f) => {
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          csv += `${f.vinculo || "COLABORADOR"};${f.nome};${f.telefone || ""};${
+          csv += `${f.vinculo || "PROFESSOR"};${f.nome};${f.telefone || ""};${
             f.placa || ""
           };${m.join(" | ")}\n`;
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-        a.download = `ponto_v4_7.csv`;
+        a.download = `ponto_v4_8.csv`;
         a.click();
       }
 
@@ -956,17 +948,17 @@
         const doc = new jsPDF("l", "mm", "a4");
         doc.text(`Relatório Geral - ${dataSelecionadaISO}`, 14, 15);
         const rows = dadosFuncionarios.map((f) => [
-          f.vinculo || "COLABORADOR",
+          f.vinculo || "PROFESSOR",
           f.nome,
-          f.telefone || "-",
+          f.placa || "-",
           (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
         ]);
         doc.autoTable({
-          head: [["Tipo", "Nome", "WhatsApp", "Batidas"]],
+          head: [["Tipo", "Nome", "Placa", "Batidas"]],
           body: rows,
           startY: 20,
         });
-        doc.save(`Relatorio_Ponto_v47.pdf`);
+        doc.save(`Relatorio_Ponto.pdf`);
       }
 
       function gerarFolhaIndividual(id) {
@@ -995,7 +987,7 @@
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_v4_7.json`;
+        a.download = `backup_v4_8.json`;
         a.click();
       }
 
