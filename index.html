@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.4</title>
+    <title>PONTO PRO v4.5</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -26,6 +26,7 @@
         --border: #dfe6e9;
         --nav-bg: #ffffff;
         --local-bg: #e8f8f5;
+        --alert-color: #e67e22;
       }
       body.dark-mode {
         --bg-body: #18191a;
@@ -48,6 +49,7 @@
         padding-bottom: 80px;
         transition: background 0.3s;
       }
+
       .app-header {
         position: sticky;
         top: 0;
@@ -64,6 +66,8 @@
         max-width: 800px;
         margin: 0 auto;
       }
+
+      /* DASHBOARD */
       .dash-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -83,6 +87,7 @@
         font-size: 18px;
         font-weight: bold;
       }
+
       .search-input {
         width: 100%;
         padding: 12px;
@@ -92,12 +97,43 @@
         color: var(--text-main);
         margin-bottom: 15px;
       }
+
+      /* CARDS */
       .emp-card {
         background: var(--bg-card);
         border-radius: 15px;
         padding: 15px;
         margin-bottom: 12px;
         border: 1px solid var(--border);
+        position: relative;
+        transition: 0.3s;
+      }
+      .emp-card.has-alert {
+        border: 2px solid var(--alert-color);
+        box-shadow: 0 0 10px rgba(230, 126, 34, 0.2);
+        animation: pulseAlert 2s infinite;
+      }
+      @keyframes pulseAlert {
+        0% {
+          border-color: var(--alert-color);
+        }
+        50% {
+          border-color: transparent;
+        }
+        100% {
+          border-color: var(--alert-color);
+        }
+      }
+
+      .alert-msg {
+        background: var(--alert-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-size: 10px;
+        font-weight: bold;
+        margin-top: 5px;
+        display: inline-block;
       }
       .status-pill {
         font-size: 10px;
@@ -119,15 +155,14 @@
         font-size: 11px;
         font-weight: bold;
         border: 1px solid var(--border);
-        position: relative;
       }
       .edited-badge {
         font-size: 8px;
         color: var(--danger);
         font-weight: bold;
         margin-top: 2px;
-        display: block;
       }
+
       .smart-details {
         max-height: 0;
         overflow: hidden;
@@ -137,11 +172,12 @@
         border-radius: 8px;
       }
       .emp-card.open .smart-details {
-        max-height: 600px;
+        max-height: 700px;
         opacity: 1;
         margin-top: 10px;
         padding: 10px;
       }
+
       .btn {
         flex: 1;
         padding: 10px;
@@ -155,12 +191,15 @@
         justify-content: center;
         gap: 5px;
       }
+
       .tab-pane {
         display: none;
       }
       .tab-pane.active {
         display: block;
       }
+
+      /* NAV */
       .bottom-nav {
         position: fixed;
         bottom: 0;
@@ -171,6 +210,7 @@
         justify-content: space-around;
         align-items: center;
         border-top: 1px solid var(--border);
+        z-index: 1000;
       }
       .nav-btn {
         background: none;
@@ -195,6 +235,8 @@
         font-size: 24px;
         box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3);
       }
+
+      /* MODAIS */
       #modalCadastro,
       #pontoEditModal {
         position: fixed;
@@ -215,17 +257,19 @@
         overflow-y: auto;
         max-height: 90vh;
       }
+
+      /* LOCAL */
       .local-card {
         background: var(--local-bg);
         border: 2px solid var(--success);
         padding: 12px;
         border-radius: 12px;
         text-align: center;
+        position: relative;
       }
-      .local-card b {
-        color: var(--success);
-        font-size: 15px;
-        display: block;
+      .local-card.alert {
+        border-color: var(--alert-color);
+        background: #fff5e6;
       }
       .local-timer {
         font-family: monospace;
@@ -237,20 +281,13 @@
         margin-top: 8px;
         display: inline-block;
       }
-      .local-veiculo-info {
-        font-size: 10px;
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px dashed var(--success);
-        color: var(--text-sub);
-      }
     </style>
   </head>
   <body>
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.4</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.5</small>
         </h1>
         <input
           type="date"
@@ -309,7 +346,7 @@
 
       <section id="tab-local" class="tab-pane">
         <h3 style="display: flex; align-items: center; gap: 10px">
-          📍 Local / Pátio
+          📍 Gestão de Pátio
           <span
             id="countLocal"
             style="
@@ -333,7 +370,7 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas v4.4</h3>
+        <h3>⚙️ Sistema v4.5</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
@@ -354,28 +391,28 @@
             style="background: #2d3436; color: white"
             onclick="validarGestor(fazerBackup)"
           >
-            💾 Backup JSON
+            💾 Backup Total
           </button>
           <button
             class="btn"
             style="background: #00b894; color: white"
             onclick="exportarExcel()"
           >
-            📊 Exportar Excel
+            📊 Excel (CSV)
           </button>
           <button
             class="btn"
             style="background: #d63031; color: white"
             onclick="exportarPDFGeral()"
           >
-            📕 PDF Geral
+            📕 Relatório PDF
           </button>
           <button
             class="btn"
             style="background: #6f42c1; color: white"
             onclick="gerenciarSenha()"
           >
-            🔑 Senha Admin
+            🔑 Senha Master
           </button>
         </div>
       </section>
@@ -396,7 +433,7 @@
 
     <div id="modalCadastro">
       <div class="modal-box">
-        <h3 id="tituloCrud">Novo Colaborador</h3>
+        <h3 id="tituloCrud">Cadastro</h3>
         <input type="hidden" id="editFuncId" />
         <input
           type="text"
@@ -410,6 +447,7 @@
           class="search-input"
           placeholder="Cargo"
         />
+
         <div
           style="
             border: 1px solid var(--border);
@@ -434,7 +472,7 @@
             type="text"
             id="formVeiculoModelo"
             class="search-input"
-            placeholder="Marca / Modelo"
+            placeholder="Marca/Modelo"
           />
           <input
             type="text"
@@ -443,20 +481,52 @@
             placeholder="Cor"
           />
         </div>
+
+        <div
+          style="
+            border: 1px solid var(--alert-color);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+          "
+        >
+          <label
+            style="
+              font-size: 10px;
+              font-weight: bold;
+              color: var(--alert-color);
+            "
+            >⚠️ ALERTA DE PÁTIO</label
+          >
+          <select
+            id="formAlerta"
+            class="search-input"
+            style="margin-top: 5px; margin-bottom: 0"
+          >
+            <option value="">NENHUM ALERTA</option>
+            <option value="FAROL ACESO">💡 FAROL ACESO</option>
+            <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
+            <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
+            <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
+            <option value="IR À GERÊNCIA">🏢 IR À GERÊNCIA</option>
+          </select>
+        </div>
+
         <input
           type="text"
           id="formObs"
           class="search-input"
-          placeholder="Observação"
+          placeholder="Observação Geral"
         />
+
         <div style="display: flex; gap: 10px">
-          <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
+          <button class="btn" onclick="fecharModalCadastro()">Sair</button>
           <button
             class="btn"
             style="background: var(--primary); color: white"
             onclick="processarFuncionario()"
           >
-            Salvar
+            Salvar Dados
           </button>
         </div>
       </div>
@@ -464,10 +534,7 @@
 
     <div id="pontoEditModal">
       <div class="modal-box">
-        <h3 id="modalFuncionarioNome">Editar Ponto</h3>
-        <p style="font-size: 10px; color: var(--danger)">
-          * Alterações manuais serão marcadas como "Editado".
-        </p>
+        <h3 id="modalFuncionarioNome">Ajustar Ponto</h3>
         <input
           type="text"
           id="modalMarcacoes"
@@ -477,13 +544,13 @@
         />
         <input type="hidden" id="modalFuncionarioId" />
         <div style="display: flex; gap: 10px; margin-top: 20px">
-          <button class="btn" onclick="closePontoEditModal()">Sair</button>
+          <button class="btn" onclick="closePontoEditModal()">Cancelar</button>
           <button
             class="btn"
             style="background: var(--success); color: white"
             onclick="savePontoEditModal()"
           >
-            Confirmar Edição
+            Salvar (Auditoria)
           </button>
         </div>
       </div>
@@ -564,12 +631,14 @@
                 : status === "PENDENTE"
                 ? "var(--warning)"
                 : "var(--text-sub)";
-            const editado = histDia.editado
-              ? '<span class="edited-badge">✏️ Editado pelo Adm</span>'
+            const alerta = f.alertaAtivo
+              ? `<div class="alert-msg">⚠️ ${f.alertaAtivo}</div>`
               : "";
 
             container.innerHTML += `
-            <div class="emp-card" onclick="this.classList.toggle('open')">
+            <div class="emp-card ${
+              f.alertaAtivo ? "has-alert" : ""
+            }" onclick="this.classList.toggle('open')">
               <div style="display:flex; justify-content:space-between; align-items:center">
                 <div><b style="font-size:16px">${f.nome}</b><br><small>${
               f.funcao
@@ -582,12 +651,20 @@
                   "---"
                 }
               </div>
-              ${editado}
+              ${alerta}
+              ${
+                histDia.editado
+                  ? '<div class="edited-badge">✏️ Editado pelo Adm</div>'
+                  : ""
+              }
               <div class="smart-details">
                 <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
-                    <b>🚗 Veículo:</b> ${f.veiculoModelo || "-"} (${
+                    <b>🚗 Veículo:</b> ${
+                      f.veiculoModelo || "-"
+                    } | <b>🎫 Placa:</b> ${f.placa || "-"} (${
               f.veiculoCor || "-"
-            }) | <b>🎫 Placa:</b> ${f.placa || "-"}
+            })<br>
+                    <b>📝 Obs:</b> ${f.observacao || "-"}
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
                   <button class="btn" style="background:#17a2b8; color:white" onclick="event.stopPropagation(); gerarFolhaIndividual('${
@@ -622,16 +699,19 @@
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
           if (m.length % 2 !== 0) {
             count++;
-            const primeiraBatida = m[0];
             p.innerHTML += `
-              <div class="local-card">
+              <div class="local-card ${f.alertaAtivo ? "alert" : ""}">
                 <b>${f.nome}</b>
-                <span class="local-timer" data-inicio="${primeiraBatida}">...</span>
-                <div class="local-veiculo-info">
-                   <span style="background:#2d3436;color:white;padding:2px 4px;border-radius:3px">${
-                     f.placa || "S/ PLACA"
+                <span class="local-timer" data-inicio="${m[0]}">...</span>
+                <div style="font-size:10px; margin-top:8px; border-top:1px dashed #ccc; padding-top:5px">
+                   <span style="background:#333;color:white;padding:1px 4px;border-radius:3px">${
+                     f.placa || "---"
                    }</span><br>
-                   <b>${f.veiculoModelo || "Veículo"}</b>
+                   ${
+                     f.alertaAtivo
+                       ? `<b style="color:var(--alert-color)">⚠️ ${f.alertaAtivo}</b>`
+                       : `<span>${f.veiculoModelo || "Veículo"}</span>`
+                   }
                 </div>
               </div>`;
           }
@@ -654,6 +734,30 @@
         });
       }
 
+      function processarFuncionario() {
+        const id =
+          document.getElementById("editFuncId").value || Date.now().toString();
+        const fExistente = dadosFuncionarios.find((x) => x.id === id);
+        const d = {
+          id: id,
+          nome: document.getElementById("formNome").value.toUpperCase(),
+          funcao: document.getElementById("formFuncao").value.toUpperCase(),
+          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          veiculoModelo: document
+            .getElementById("formVeiculoModelo")
+            .value.toUpperCase(),
+          veiculoCor: document
+            .getElementById("formVeiculoCor")
+            .value.toUpperCase(),
+          alertaAtivo: document.getElementById("formAlerta").value,
+          observacao: document.getElementById("formObs").value.toUpperCase(),
+          historico: fExistente ? fExistente.historico || {} : {},
+        };
+        db.ref("funcionarios/" + id)
+          .set(d)
+          .then(() => fecharModalCadastro());
+      }
+
       function savePontoEditModal() {
         const id = document.getElementById("modalFuncionarioId").value;
         const m = document
@@ -661,7 +765,6 @@
           .value.split(",")
           .map((t) => t.trim())
           .filter((t) => t);
-        // Salvamos com a flag "editado: true" para auditoria
         db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
           .set({
             marcacoes: m,
@@ -682,34 +785,10 @@
           .then((s) => {
             let m = s.val() || [];
             m.push(agora);
-            // Batida normal em tempo real NÃO marca como editado
             db.ref(
               `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
             ).set(m);
           });
-      }
-
-      function processarFuncionario() {
-        const id =
-          document.getElementById("editFuncId").value || Date.now().toString();
-        const fExistente = dadosFuncionarios.find((x) => x.id === id);
-        const d = {
-          id: id,
-          nome: document.getElementById("formNome").value.toUpperCase(),
-          funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
-          veiculoModelo: document
-            .getElementById("formVeiculoModelo")
-            .value.toUpperCase(),
-          veiculoCor: document
-            .getElementById("formVeiculoCor")
-            .value.toUpperCase(),
-          observacao: document.getElementById("formObs").value.toUpperCase(),
-          historico: fExistente ? fExistente.historico || {} : {},
-        };
-        db.ref("funcionarios/" + id)
-          .set(d)
-          .then(() => fecharModalCadastro());
       }
 
       function validarGestor(cb) {
@@ -736,6 +815,7 @@
         document.getElementById("formVeiculoModelo").value =
           f.veiculoModelo || "";
         document.getElementById("formVeiculoCor").value = f.veiculoCor || "";
+        document.getElementById("formAlerta").value = f.alertaAtivo || "";
         document.getElementById("formObs").value = f.observacao || "";
         document.getElementById("tituloCrud").innerText = "Editar Cadastro";
         document.getElementById("modalCadastro").style.display = "flex";
@@ -753,13 +833,13 @@
 
       function abrirModalCadastro() {
         document.getElementById("editFuncId").value = "";
-        document.getElementById("tituloCrud").innerText = "Novo Colaborador";
+        document.getElementById("tituloCrud").innerText = "Novo Cadastro";
         document.getElementById("modalCadastro").style.display = "flex";
       }
       function fecharModalCadastro() {
         document.getElementById("modalCadastro").style.display = "none";
         document
-          .querySelectorAll("#modalCadastro input")
+          .querySelectorAll("#modalCadastro input, #modalCadastro select")
           .forEach((i) => (i.value = ""));
       }
       function switchTab(id, btn) {
@@ -785,7 +865,8 @@
         renderizarCards();
       }
       function excluirFuncionario(id) {
-        if (confirm("Excluir?")) db.ref("funcionarios/" + id).remove();
+        if (confirm("Excluir definitivamente?"))
+          db.ref("funcionarios/" + id).remove();
       }
       function closePontoEditModal() {
         document.getElementById("pontoEditModal").style.display = "none";
@@ -793,7 +874,7 @@
       function gerenciarSenha() {
         const a = prompt("Senha atual:");
         if (a === localStorage.getItem(PASS_KEY)) {
-          const n = prompt("Nova:");
+          const n = prompt("Nova senha:");
           if (n) localStorage.setItem(PASS_KEY, n);
         }
       }
@@ -816,11 +897,11 @@
       }
 
       function exportarExcel() {
-        let csv = "\ufeffNome;Cargo;Placa;Editado;Batidas\n";
+        let csv = "\ufeffNome;Cargo;Placa;Alerta;Batidas\n";
         dadosFuncionarios.forEach((f) => {
           const hist = f.historico?.[dataSelecionadaISO] || {};
           csv += `${f.nome};${f.funcao};${f.placa || ""};${
-            hist.editado ? "Sim" : "Não"
+            f.alertaAtivo || ""
           };${(hist.marcacoes || []).join(" | ")}\n`;
         });
         const a = document.createElement("a");
@@ -836,22 +917,22 @@
         const rows = dadosFuncionarios.map((f) => [
           f.nome,
           f.placa || "-",
-          f.historico?.[dataSelecionadaISO]?.editado ? "SIM" : "NÃO",
+          f.alertaAtivo || "OK",
           (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
         ]);
         doc.autoTable({
-          head: [["Nome", "Placa", "Editado", "Batidas"]],
+          head: [["Nome", "Placa", "Alerta", "Batidas"]],
           body: rows,
           startY: 20,
         });
-        doc.save(`Geral.pdf`);
+        doc.save(`Relatorio_Ponto.pdf`);
       }
 
       function gerarFolhaIndividual(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text(`Folha de Ponto: ${f.nome}`, 14, 15);
+        doc.text(`Folha Individual: ${f.nome}`, 14, 15);
         const hist = f.historico?.[dataSelecionadaISO] || {};
         const rows = [
           [
@@ -874,7 +955,7 @@
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_v4_4.json`;
+        a.download = `backup_v4_5.json`;
         a.click();
       }
 
