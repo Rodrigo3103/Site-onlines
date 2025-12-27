@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.8</title>
+    <title>PONTO PRO v4.9</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -162,7 +162,6 @@
         gap: 5px;
         cursor: pointer;
         text-decoration: none;
-        width: fit-content;
       }
       .btn-group-alert {
         background: #d63031;
@@ -188,7 +187,7 @@
         border-radius: 8px;
       }
       .emp-card.open .smart-details {
-        max-height: 1000px;
+        max-height: 1200px;
         opacity: 1;
         margin-top: 10px;
         padding: 10px;
@@ -288,13 +287,27 @@
         margin-top: 8px;
         display: inline-block;
       }
+
+      /* Logs v4.9 */
+      .log-item {
+        background: var(--bg-body);
+        padding: 8px;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        font-size: 10px;
+        border-left: 3px solid var(--primary);
+      }
+      .log-date {
+        font-weight: bold;
+        color: var(--primary);
+      }
     </style>
   </head>
   <body>
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.8</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.9</small>
         </h1>
         <input
           type="date"
@@ -365,8 +378,15 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas v4.8</h3>
+        <h3>⚙️ Ferramentas v4.9</h3>
         <div style="display: grid; gap: 10px">
+          <button
+            class="btn"
+            style="background: #2d3436; color: white"
+            onclick="abrirAuditoria()"
+          >
+            📜 Ver Logs de Auditoria
+          </button>
           <button
             class="btn"
             style="background: #e67e22; color: white"
@@ -383,13 +403,6 @@
           />
           <button
             class="btn"
-            style="background: #2d3436; color: white"
-            onclick="validarGestor(fazerBackup)"
-          >
-            💾 Backup Total
-          </button>
-          <button
-            class="btn"
             style="background: #00b894; color: white"
             onclick="exportarExcel()"
           >
@@ -402,6 +415,42 @@
           >
             📕 PDF Geral
           </button>
+          <button
+            class="btn"
+            style="background: #6c757d; color: white"
+            onclick="validarGestor(fazerBackup)"
+          >
+            💾 Backup Total
+          </button>
+        </div>
+
+        <div
+          id="auditoriaBox"
+          style="
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--bg-card);
+            border-radius: 15px;
+            border: 1px solid var(--border);
+          "
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <h4>Auditoria Recente</h4>
+            <button
+              onclick="document.getElementById('auditoriaBox').style.display='none'"
+              style="border: none; background: none; color: red"
+            >
+              X
+            </button>
+          </div>
+          <div id="logList"></div>
         </div>
       </section>
     </div>
@@ -498,7 +547,6 @@
             <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
             <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
             <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
-            <option value="IR À GERÊNCIA">🏢 IR À GERÊNCIA</option>
           </select>
         </div>
         <div style="display: flex; gap: 10px">
@@ -552,32 +600,62 @@
       const db = firebase.database();
 
       let dadosFuncionarios = [];
+      let logsAuditoria = [];
       let dataSelecionadaISO = new Date().toISOString().slice(0, 10);
       const PASS_KEY = "ponto_admin_pass";
 
-      db.ref("funcionarios").on("value", (snapshot) => {
-        const data = snapshot.val();
-        dadosFuncionarios = data ? Object.values(data) : [];
+      // Listeners Firebase
+      db.ref("funcionarios").on("value", (s) => {
+        dadosFuncionarios = s.val() ? Object.values(s.val()) : [];
         renderizarCards();
         renderizarPainelPresenca();
       });
 
-      setInterval(atualizarCronometros, 1000);
+      db.ref("auditoria")
+        .limitToLast(50)
+        .on("value", (s) => {
+          logsAuditoria = s.val() ? Object.values(s.val()).reverse() : [];
+          renderizarLogs();
+        });
 
+      function registrarLog(msg) {
+        const id = Date.now();
+        const data = new Date().toLocaleString("pt-BR");
+        db.ref(`auditoria/${id}`).set({ data, acao: msg });
+      }
+
+      function abrirAuditoria() {
+        validarGestor(() => {
+          document.getElementById("auditoriaBox").style.display = "block";
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+      }
+
+      function renderizarLogs() {
+        const list = document.getElementById("logList");
+        list.innerHTML = logsAuditoria
+          .map(
+            (l) => `
+            <div class="log-item">
+                <span class="log-date">[${l.data}]</span><br>${l.acao}
+            </div>
+        `
+          )
+          .join("");
+      }
+
+      // Funções de Máscara
       function aplicarMascaraTelefone(i) {
         let v = i.value.replace(/\D/g, "");
-        if (v.length > 11) v = v.substring(0, 11);
         if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
         if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
         i.value = v;
       }
-
       function aplicarMascaraPlaca(i) {
         let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
         if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
         i.value = v;
       }
-
       function aplicarMascaraPonto(i) {
         let v = i.value.replace(/\D/g, "");
         let f = "";
@@ -589,13 +667,13 @@
         i.value = f;
       }
 
+      // WhatsApp & Grupo
       function enviarZapIndividual(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
-        if (!f.telefone) return alert("WhatsApp não cadastrado!");
         const msg = f.alertaAtivo
-          ? `Olá ${f.nome}, notamos pelo sistema que seu veículo ${
-              f.veiculoModelo || ""
-            } (${f.placa || ""}) está com: *${f.alertaAtivo}* no pátio.`
+          ? `Olá ${f.nome}, o veículo ${f.veiculoModelo || ""} (${
+              f.placa || ""
+            }) está com: *${f.alertaAtivo}*.`
           : `Olá ${f.nome}, tudo bem?`;
         window.open(
           `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
@@ -606,193 +684,37 @@
         );
       }
 
-      // NOVIDADE v4.8: Notificar Grupo
       function notificarGrupo(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
         const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*PROFESSOR:* ${
           f.nome
         }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
           f.alertaAtivo
-        }\n\n_Mensagem via PONTO PRO_`;
-
-        // Copia para o teclado
-        navigator.clipboard
-          .writeText(texto)
-          .then(() => {
-            alert(
-              "Texto da ocorrência copiado! Agora escolha o grupo no WhatsApp e cole (Ctrl+V)."
-            );
-            window.open(
-              `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
-              "_blank"
-            );
-          })
-          .catch(() => {
-            window.open(
-              `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
-              "_blank"
-            );
-          });
-      }
-
-      function renderizarCards() {
-        const container = document.getElementById("cardsContainer");
-        const busca = document
-          .getElementById("searchInput")
-          .value.toUpperCase();
-        container.innerHTML = "";
-
-        dadosFuncionarios
-          .filter((f) => {
-            return (f.nome + (f.placa || "") + (f.vinculo || ""))
-              .toUpperCase()
-              .includes(busca);
-          })
-          .forEach((f) => {
-            const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-            const status =
-              m.length === 0
-                ? "VAZIO"
-                : m.length % 2 !== 0
-                ? "PENDENTE"
-                : "FECHADO";
-            const vinculo = f.vinculo || "COLABORADOR";
-
-            container.innerHTML += `
-            <div class="emp-card ${
-              f.alertaAtivo ? "has-alert" : ""
-            }" onclick="this.classList.toggle('open')">
-              <span class="badge-vinculo" style="background:${
-                vinculo === "VISITANTE"
-                  ? "#3498db"
-                  : vinculo === "TERCEIRIZADO"
-                  ? "#9b59b6"
-                  : "#636e72"
-              }">${vinculo}</span>
-              <div style="display:flex; justify-content:space-between; align-items:center">
-                <div><b style="font-size:16px">${f.nome}</b><br><small>${
-              f.funcao
-            }</small></div>
-                <span class="status-pill" style="background:${
-                  status === "FECHADO"
-                    ? "var(--success)"
-                    : status === "PENDENTE"
-                    ? "var(--warning)"
-                    : "var(--text-sub)"
-                }">${status}</span>
-              </div>
-              <div class="marcacoes-row">
-                ${
-                  m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
-                  "---"
-                }
-              </div>
-              
-              <div style="display:flex; flex-wrap:wrap; gap:8px">
-                ${
-                  f.telefone
-                    ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZapIndividual('${f.id}')">📱 WhatsApp</button>`
-                    : ""
-                }
-                ${
-                  f.alertaAtivo
-                    ? `<button class="btn-group-alert" onclick="event.stopPropagation(); notificarGrupo('${f.id}')">🚨 Notificar Grupo</button>`
-                    : ""
-                }
-              </div>
-
-              <div class="smart-details">
-                <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
-                    <b>🚗 Veículo:</b> ${
-                      f.veiculoModelo || "-"
-                    } | <b>🎫 Placa:</b> ${f.placa || "-"}<br>
-                    <b>📞 WhatsApp:</b> ${f.telefone || "---"}<br>
-                    ${
-                      f.alertaAtivo
-                        ? `<b style="color:var(--alert-color)">ALERTA ATUAL: ${f.alertaAtivo}</b>`
-                        : ""
-                    }
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
-                  <button class="btn" style="background:#17a2b8; color:white" onclick="event.stopPropagation(); gerarFolhaIndividual('${
-                    f.id
-                  }')">📄 PDF</button>
-                  <button class="btn" style="background:#007bff; color:white" onclick="event.stopPropagation(); iniciarEdicaoPonto('${
-                    f.id
-                  }')">✏️ Ponto</button>
-                  <button class="btn" style="background:var(--text-sub); color:white" onclick="event.stopPropagation(); iniciarEdicaoCadastro('${
-                    f.id
-                  }')">⚙️ Dados</button>
-                  <button class="btn" style="background:var(--danger); color:white" onclick="event.stopPropagation(); validarGestor(() => excluirFuncionario('${
-                    f.id
-                  }'))">🗑️ Excluir</button>
-                </div>
-              </div>
-              <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px" onclick="event.stopPropagation(); baterPonto('${
-                f.id
-              }')">REGISTRAR ENTRADA/SAÍDA</button>
-            </div>`;
-          });
-        atualizarDashboard();
-      }
-
-      function renderizarPainelPresenca() {
-        const p = document.getElementById("presencePanel");
-        const c = document.getElementById("countLocal");
-        p.innerHTML = "";
-        let count = 0;
-
-        dadosFuncionarios.forEach((f) => {
-          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          if (m.length % 2 !== 0) {
-            count++;
-            p.innerHTML += `
-              <div class="local-card ${f.alertaAtivo ? "has-alert" : ""}">
-                <small>${f.vinculo || "PROFESSOR"}</small>
-                <b style="display:block">${f.nome}</b>
-                <span class="local-timer" data-inicio="${m[0]}">...</span>
-                <div style="font-size:10px; margin-top:8px; border-top:1px dashed #ccc; padding-top:5px">
-                   <span style="background:#333;color:white;padding:1px 4px;border-radius:3px">${
-                     f.placa || "S/P"
-                   }</span><br>
-                   ${
-                     f.alertaAtivo
-                       ? `<a href="#" onclick="notificarGrupo('${f.id}')" style="color:red; font-weight:bold; text-decoration:none">🚨 NOTIFICAR GRUPO</a>`
-                       : `<span>${f.veiculoModelo || "-"}</span>`
-                   }
-                </div>
-              </div>`;
-          }
-        });
-        c.innerText = count;
-        atualizarCronometros();
-      }
-
-      function atualizarCronometros() {
-        document.querySelectorAll(".local-timer").forEach((t) => {
-          const [h, m, s] = t.dataset.inicio.split(":").map(Number);
-          const inicio = new Date();
-          inicio.setHours(h, m, s);
-          let diff = Math.floor((new Date() - inicio) / 1000);
-          if (diff < 0) diff = 0;
-          const hrs = String(Math.floor(diff / 3600)).padStart(2, "0");
-          const min = String(Math.floor((diff % 3600) / 60)).padStart(2, "0");
-          const seg = String(diff % 60).padStart(2, "0");
-          t.innerText = `${hrs}:${min}:${seg}`;
+        }\n\n_Mensagem via PONTO PRO v4.9_`;
+        navigator.clipboard.writeText(texto).then(() => {
+          alert("Texto copiado! Escolha o grupo e cole.");
+          window.open(
+            `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
+            "_blank"
+          );
         });
       }
 
+      // CRUD v4.9 com Logs
       function processarFuncionario() {
         const id =
           document.getElementById("editFuncId").value || Date.now().toString();
         const fExistente = dadosFuncionarios.find((x) => x.id === id);
+        const nome = document.getElementById("formNome").value.toUpperCase();
+        const placa = document.getElementById("formPlaca").value.toUpperCase();
+
         const d = {
           id: id,
           vinculo: document.getElementById("formVinculo").value,
-          nome: document.getElementById("formNome").value.toUpperCase(),
+          nome,
           telefone: document.getElementById("formTelefone").value,
           funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          placa,
           veiculoModelo: document
             .getElementById("formVeiculoModelo")
             .value.toUpperCase(),
@@ -802,11 +724,45 @@
           alertaAtivo: document.getElementById("formAlerta").value,
           historico: fExistente ? fExistente.historico || {} : {},
         };
+
         db.ref("funcionarios/" + id)
           .set(d)
-          .then(() => fecharModalCadastro());
+          .then(() => {
+            registrarLog(`Adm alterou dados de: ${nome} (Placa: ${placa})`);
+            fecharModalCadastro();
+          });
       }
 
+      function excluirFuncionario(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        if (confirm(`Deseja excluir ${f.nome}?`)) {
+          db.ref("funcionarios/" + id)
+            .remove()
+            .then(() => {
+              registrarLog(`Adm EXCLUIU o funcionário: ${f.nome}`);
+            });
+        }
+      }
+
+      function savePontoEditModal() {
+        const id = document.getElementById("modalFuncionarioId").value;
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const m = document
+          .getElementById("modalMarcacoes")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter((t) => t);
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
+          .update({ marcacoes: m, editado: true })
+          .then(() => {
+            registrarLog(
+              `Adm AJUSTOU ponto de: ${f.nome} na data ${dataSelecionadaISO}`
+            );
+            closePontoEditModal();
+          });
+      }
+
+      // Lógica de Ponto
       function baterPonto(id) {
         const agora = new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
@@ -824,16 +780,115 @@
           });
       }
 
-      function savePontoEditModal() {
-        const id = document.getElementById("modalFuncionarioId").value;
-        const m = document
-          .getElementById("modalMarcacoes")
-          .value.split(",")
-          .map((t) => t.trim())
-          .filter((t) => t);
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
-          .update({ marcacoes: m, editado: true })
-          .then(() => closePontoEditModal());
+      // Renderização
+      function renderizarCards() {
+        const container = document.getElementById("cardsContainer");
+        const busca = document
+          .getElementById("searchInput")
+          .value.toUpperCase();
+        container.innerHTML = "";
+        dadosFuncionarios
+          .filter((f) =>
+            (f.nome + (f.placa || "")).toUpperCase().includes(busca)
+          )
+          .forEach((f) => {
+            const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
+            const status =
+              m.length === 0
+                ? "VAZIO"
+                : m.length % 2 !== 0
+                ? "PENDENTE"
+                : "FECHADO";
+            container.innerHTML += `
+            <div class="emp-card ${
+              f.alertaAtivo ? "has-alert" : ""
+            }" onclick="this.classList.toggle('open')">
+              <span class="badge-vinculo" style="background:#636e72">${
+                f.vinculo || "PROFESSOR"
+              }</span>
+              <div style="display:flex; justify-content:space-between; align-items:center">
+                <div><b>${f.nome}</b><br><small>${f.funcao}</small></div>
+                <span class="status-pill" style="background:${
+                  status === "FECHADO"
+                    ? "var(--success)"
+                    : status === "PENDENTE"
+                    ? "var(--warning)"
+                    : "var(--text-sub)"
+                }">${status}</span>
+              </div>
+              <div class="marcacoes-row">${
+                m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
+                "---"
+              }</div>
+              <div style="display:flex; gap:5px">
+                ${
+                  f.telefone
+                    ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZapIndividual('${f.id}')">📱 Zap</button>`
+                    : ""
+                }
+                ${
+                  f.alertaAtivo
+                    ? `<button class="btn-group-alert" onclick="event.stopPropagation(); notificarGrupo('${f.id}')">🚨 Grupo</button>`
+                    : ""
+                }
+              </div>
+              <div class="smart-details">
+                <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
+                    <b>🚗 Veículo:</b> ${
+                      f.veiculoModelo || "-"
+                    } | <b>🎫 Placa:</b> ${f.placa || "-"}
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
+                  <button class="btn" style="background:#007bff; color:white" onclick="event.stopPropagation(); iniciarEdicaoPonto('${
+                    f.id
+                  }')">✏️ Ponto</button>
+                  <button class="btn" style="background:var(--text-sub); color:white" onclick="event.stopPropagation(); iniciarEdicaoCadastro('${
+                    f.id
+                  }')">⚙️ Dados</button>
+                  <button class="btn" style="background:var(--danger); color:white" onclick="event.stopPropagation(); excluirFuncionario('${
+                    f.id
+                  }')">🗑️ Excluir</button>
+                </div>
+              </div>
+              <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px" onclick="event.stopPropagation(); baterPonto('${
+                f.id
+              }')">REGISTRAR AGORA</button>
+            </div>`;
+          });
+        atualizarDashboard();
+      }
+
+      function renderizarPainelPresenca() {
+        const p = document.getElementById("presencePanel");
+        const c = document.getElementById("countLocal");
+        p.innerHTML = "";
+        let count = 0;
+        dadosFuncionarios.forEach((f) => {
+          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
+          if (m.length % 2 !== 0) {
+            count++;
+            p.innerHTML += `<div class="local-card">
+                <b>${f.nome}</b><br>
+                <span class="local-timer" data-inicio="${m[0]}">...</span><br>
+                <small>${f.placa || "S/P"}</small>
+            </div>`;
+          }
+        });
+        c.innerText = count;
+      }
+
+      function atualizarCronometros() {
+        document.querySelectorAll(".local-timer").forEach((t) => {
+          const [h, m, s] = t.dataset.inicio.split(":").map(Number);
+          const inicio = new Date();
+          inicio.setHours(h, m, s);
+          let diff = Math.floor((new Date() - inicio) / 1000);
+          if (diff < 0) diff = 0;
+          const hrs = String(Math.floor(diff / 3600)).padStart(2, "0");
+          const min = String(Math.floor((diff % 3600) / 60)).padStart(2, "0");
+          const seg = String(diff % 60).padStart(2, "0");
+          t.innerText = `${hrs}:${min}:${seg}`;
+        });
       }
 
       function validarGestor(cb) {
@@ -854,15 +909,9 @@
       function iniciarEdicaoCadastro(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
         document.getElementById("editFuncId").value = f.id;
-        document.getElementById("formVinculo").value =
-          f.vinculo || "COLABORADOR";
         document.getElementById("formNome").value = f.nome;
         document.getElementById("formTelefone").value = f.telefone || "";
-        document.getElementById("formFuncao").value = f.funcao;
         document.getElementById("formPlaca").value = f.placa || "";
-        document.getElementById("formVeiculoModelo").value =
-          f.veiculoModelo || "";
-        document.getElementById("formVeiculoCor").value = f.veiculoCor || "";
         document.getElementById("formAlerta").value = f.alertaAtivo || "";
         document.getElementById("modalCadastro").style.display = "flex";
       }
@@ -883,9 +932,9 @@
       }
       function fecharModalCadastro() {
         document.getElementById("modalCadastro").style.display = "none";
-        document
-          .querySelectorAll("#modalCadastro input, #modalCadastro select")
-          .forEach((i) => (i.value = ""));
+      }
+      function closePontoEditModal() {
+        document.getElementById("pontoEditModal").style.display = "none";
       }
       function switchTab(id, btn) {
         document
@@ -903,15 +952,7 @@
       function atualizarDataFiltro() {
         dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
         renderizarCards();
-        renderizarPainelPresenca();
       }
-      function excluirFuncionario(id) {
-        if (confirm("Excluir?")) db.ref("funcionarios/" + id).remove();
-      }
-      function closePontoEditModal() {
-        document.getElementById("pontoEditModal").style.display = "none";
-      }
-
       function atualizarDashboard() {
         let ok = 0,
           pen = 0,
@@ -930,64 +971,48 @@
       }
 
       function exportarExcel() {
-        let csv = "\ufeffVinculo;Nome;WhatsApp;Placa;Batidas\n";
+        let csv = "\ufeffNome;Placa;Batidas\n";
         dadosFuncionarios.forEach((f) => {
-          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          csv += `${f.vinculo || "PROFESSOR"};${f.nome};${f.telefone || ""};${
-            f.placa || ""
-          };${m.join(" | ")}\n`;
+          csv += `${f.nome};${f.placa || ""};${(
+            f.historico?.[dataSelecionadaISO]?.marcacoes || []
+          ).join(" | ")}\n`;
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-        a.download = `ponto_v4_8.csv`;
+        a.download = `ponto_v4_9.csv`;
         a.click();
       }
 
       function exportarPDFGeral() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF("l", "mm", "a4");
-        doc.text(`Relatório Geral - ${dataSelecionadaISO}`, 14, 15);
+        const doc = new jsPDF("l");
+        doc.text(`Relatório - ${dataSelecionadaISO}`, 14, 15);
         const rows = dadosFuncionarios.map((f) => [
-          f.vinculo || "PROFESSOR",
           f.nome,
           f.placa || "-",
           (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
         ]);
         doc.autoTable({
-          head: [["Tipo", "Nome", "Placa", "Batidas"]],
+          head: [["Nome", "Placa", "Batidas"]],
           body: rows,
           startY: 20,
         });
-        doc.save(`Relatorio_Ponto.pdf`);
-      }
-
-      function gerarFolhaIndividual(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text(`Folha: ${f.nome}`, 14, 15);
-        const hist = f.historico?.[dataSelecionadaISO] || {};
-        doc.autoTable({
-          head: [["Data", "Ajuste", "Batidas"]],
-          body: [
-            [
-              dataSelecionadaISO,
-              hist.editado ? "SIM" : "NÃO",
-              (hist.marcacoes || []).join(" | "),
-            ],
-          ],
-          startY: 25,
-        });
-        doc.save(`Folha_${f.nome}.pdf`);
+        doc.save(`Ponto_v4_9.pdf`);
       }
 
       function fazerBackup() {
-        const b = new Blob([JSON.stringify(dadosFuncionarios)], {
-          type: "application/json",
-        });
+        const b = new Blob(
+          [
+            JSON.stringify({
+              funcionarios: dadosFuncionarios,
+              auditoria: logsAuditoria,
+            }),
+          ],
+          { type: "application/json" }
+        );
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_v4_8.json`;
+        a.download = `backup_full_v4_9.json`;
         a.click();
       }
 
@@ -997,18 +1022,16 @@
         reader.onload = (e) => {
           try {
             const json = JSON.parse(e.target.result);
-            const nodes = {};
-            (Array.isArray(json) ? json : Object.values(json)).forEach((f) => {
-              if (f.id) nodes[f.id] = f;
-            });
-            if (confirm("Importar?")) db.ref("funcionarios").set(nodes);
+            if (confirm("Deseja importar todos os dados e logs?"))
+              db.ref("/").update(json);
           } catch (err) {
-            alert("Erro!");
+            alert("Arquivo inválido!");
           }
         };
         reader.readAsText(file);
       }
 
+      setInterval(atualizarCronometros, 1000);
       document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
     </script>
   </body>
