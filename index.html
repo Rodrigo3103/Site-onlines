@@ -47,7 +47,7 @@
         background-color: var(--bg-body);
         color: var(--text-main);
         margin: 0;
-        padding-bottom: 80px;
+        padding-bottom: 100px;
         transition: background 0.3s;
       }
 
@@ -151,29 +151,32 @@
         background: var(--whatsapp);
         color: white;
         border: none;
-        padding: 6px 12px;
+        padding: 10px 15px;
         border-radius: 20px;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: bold;
         display: flex;
         align-items: center;
         gap: 5px;
         cursor: pointer;
         text-decoration: none;
+        position: relative;
+        z-index: 20;
       }
       .btn-group-alert {
         background: #d63031;
         color: white;
         border: none;
-        padding: 6px 12px;
+        padding: 10px 15px;
         border-radius: 20px;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: bold;
         display: flex;
         align-items: center;
         gap: 5px;
         cursor: pointer;
-        margin-top: 5px;
+        position: relative;
+        z-index: 20;
       }
 
       .smart-details {
@@ -203,6 +206,8 @@
         align-items: center;
         justify-content: center;
         gap: 5px;
+        position: relative;
+        z-index: 10;
       }
       .tab-pane {
         display: none;
@@ -221,7 +226,7 @@
         justify-content: space-around;
         align-items: center;
         border-top: 1px solid var(--border);
-        z-index: 1000;
+        z-index: 1100;
       }
       .nav-btn {
         background: none;
@@ -286,7 +291,6 @@
         margin-top: 8px;
         display: inline-block;
       }
-
       .log-item {
         background: var(--bg-body);
         padding: 8px;
@@ -294,10 +298,6 @@
         margin-bottom: 5px;
         font-size: 10px;
         border-left: 3px solid var(--primary);
-      }
-      .log-date {
-        font-weight: bold;
-        color: var(--primary);
       }
     </style>
   </head>
@@ -439,21 +439,6 @@
             border: 1px solid var(--border);
           "
         >
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            "
-          >
-            <h4>Auditoria Recente</h4>
-            <button
-              onclick="document.getElementById('auditoriaBox').style.display='none'"
-              style="border: none; background: none; color: red"
-            >
-              X
-            </button>
-          </div>
           <div id="logList"></div>
         </div>
       </section>
@@ -500,59 +485,31 @@
           class="search-input"
           placeholder="Cargo / Setor"
         />
-        <div
-          style="
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-          "
+        <input
+          type="text"
+          id="formPlaca"
+          class="search-input"
+          placeholder="Placa"
+          oninput="aplicarMascaraPlaca(this)"
+          maxlength="8"
+        />
+        <input
+          type="text"
+          id="formVeiculoModelo"
+          class="search-input"
+          placeholder="Modelo do Veículo"
+        />
+        <label
+          style="font-size: 10px; font-weight: bold; color: var(--alert-color)"
+          >⚠️ ALERTA ATIVO</label
         >
-          <input
-            type="text"
-            id="formPlaca"
-            class="search-input"
-            placeholder="Placa"
-            oninput="aplicarMascaraPlaca(this)"
-            maxlength="8"
-          />
-          <input
-            type="text"
-            id="formVeiculoModelo"
-            class="search-input"
-            placeholder="Modelo do Veículo"
-          />
-          <input
-            type="text"
-            id="formVeiculoCor"
-            class="search-input"
-            placeholder="Cor"
-          />
-        </div>
-        <div
-          style="
-            border: 1px solid var(--alert-color);
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-          "
-        >
-          <label
-            style="
-              font-size: 10px;
-              font-weight: bold;
-              color: var(--alert-color);
-            "
-            >⚠️ STATUS DE ALERTA</label
-          >
-          <select id="formAlerta" class="search-input" style="margin-top: 5px">
-            <option value="">NENHUM</option>
-            <option value="FAROL ACESO">💡 FAROL ACESO</option>
-            <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
-            <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
-            <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
-          </select>
-        </div>
+        <select id="formAlerta" class="search-input">
+          <option value="">NENHUM</option>
+          <option value="FAROL ACESO">💡 FAROL ACESO</option>
+          <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
+          <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
+          <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
+        </select>
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
           <button
@@ -566,35 +523,9 @@
       </div>
     </div>
 
-    <div id="pontoEditModal">
-      <div class="modal-box">
-        <h3 id="modalFuncionarioNome">Ajustar Horários</h3>
-        <input
-          type="text"
-          id="modalMarcacoes"
-          class="search-input"
-          oninput="aplicarMascaraPonto(this)"
-        />
-        <input type="hidden" id="modalFuncionarioId" />
-        <div style="display: flex; gap: 10px; margin-top: 20px">
-          <button class="btn" onclick="closePontoEditModal()">Sair</button>
-          <button
-            class="btn"
-            style="background: var(--success); color: white"
-            onclick="savePontoEditModal()"
-          >
-            Confirmar
-          </button>
-        </div>
-      </div>
-    </div>
-
     <div id="modalSenha">
       <div class="modal-box">
-        <h3>Gerenciar Senha Admin</h3>
-        <p style="font-size: 11px; color: var(--text-sub)">
-          Defina uma nova senha para acesso às ferramentas restritas.
-        </p>
+        <h3>Alterar Senha Admin</h3>
         <input
           type="password"
           id="inputNovaSenha"
@@ -606,14 +537,37 @@
             class="btn"
             onclick="document.getElementById('modalSenha').style.display='none'"
           >
-            Cancelar
+            Sair
           </button>
           <button
             class="btn"
             style="background: var(--success); color: white"
             onclick="salvarNovaSenha()"
           >
-            Salvar Senha
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pontoEditModal">
+      <div class="modal-box">
+        <h3 id="modalFuncionarioNome">Ajustar Ponto</h3>
+        <input
+          type="text"
+          id="modalMarcacoes"
+          class="search-input"
+          oninput="aplicarMascaraPonto(this)"
+        />
+        <input type="hidden" id="modalFuncionarioId" />
+        <div style="display: flex; gap: 10px">
+          <button class="btn" onclick="closePontoEditModal()">Sair</button>
+          <button
+            class="btn"
+            style="background: var(--success); color: white"
+            onclick="savePontoEditModal()"
+          >
+            Confirmar
           </button>
         </div>
       </div>
@@ -645,45 +599,24 @@
       });
 
       db.ref("auditoria")
-        .limitToLast(50)
+        .limitToLast(30)
         .on("value", (s) => {
           logsAuditoria = s.val() ? Object.values(s.val()).reverse() : [];
           renderizarLogs();
         });
 
-      function registrarLog(msg) {
-        const id = Date.now();
-        const data = new Date().toLocaleString("pt-BR");
-        db.ref(`auditoria/${id}`).set({ data, acao: msg });
-      }
-
-      function abrirGerenciadorSenha() {
-        document.getElementById("modalSenha").style.display = "flex";
-      }
-      function salvarNovaSenha() {
-        const nova = document.getElementById("inputNovaSenha").value;
-        if (nova) {
-          localStorage.setItem(PASS_KEY, nova);
-          alert("Senha alterada com sucesso!");
-          document.getElementById("modalSenha").style.display = "none";
-        }
-      }
-
-      function abrirAuditoria() {
-        validarGestor(() => {
-          document.getElementById("auditoriaBox").style.display = "block";
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-      }
-
       function renderizarLogs() {
         const list = document.getElementById("logList");
         list.innerHTML = logsAuditoria
           .map(
-            (l) =>
-              `<div class="log-item"><span class="log-date">[${l.data}]</span><br>${l.acao}</div>`
+            (l) => `<div class="log-item"><b>[${l.data}]</b> ${l.acao}</div>`
           )
           .join("");
+      }
+
+      function registrarLog(msg) {
+        const data = new Date().toLocaleString("pt-BR");
+        db.ref("auditoria").push({ data, acao: msg });
       }
 
       function aplicarMascaraTelefone(i) {
@@ -692,11 +625,13 @@
         if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
         i.value = v;
       }
+
       function aplicarMascaraPlaca(i) {
         let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
         if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
         i.value = v;
       }
+
       function aplicarMascaraPonto(i) {
         let v = i.value.replace(/\D/g, "");
         let f = "";
@@ -708,12 +643,51 @@
         i.value = f;
       }
 
+      function notificarGrupo(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*PROFESSOR:* ${
+          f.nome
+        }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
+          f.alertaAtivo
+        }\n\n_PONTO PRO v4.9_`;
+
+        // No celular, o Clipboard API às vezes falha em elementos que não são input.
+        // Criamos um elemento temporário para garantir a cópia.
+        const el = document.createElement("textarea");
+        el.value = texto;
+        document.body.appendChild(el);
+        el.select();
+        el.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        document.body.removeChild(el);
+
+        alert("Mensagem copiada! Abrindo o WhatsApp...");
+
+        // Abre o link direto do WhatsApp (funciona melhor em celular)
+        const url = `whatsapp://send?text=${encodeURIComponent(texto)}`;
+        window.location.href = url;
+
+        // Fallback caso o whatsapp:// não funcione
+        setTimeout(() => {
+          if (
+            confirm(
+              "Se o WhatsApp não abriu, clique em OK para tentar via Web."
+            )
+          ) {
+            window.open(
+              `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
+              "_blank"
+            );
+          }
+        }, 1500);
+      }
+
       function enviarZapIndividual(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
         const msg = f.alertaAtivo
-          ? `Olá ${f.nome}, o veículo ${f.veiculoModelo || ""} (${
-              f.placa || ""
-            }) está com: *${f.alertaAtivo}*.`
+          ? `Olá ${f.nome}, o seu veículo (${f.placa || ""}) está com: *${
+              f.alertaAtivo
+            }*.`
           : `Olá ${f.nome}, tudo bem?`;
         window.open(
           `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
@@ -722,118 +696,6 @@
           )}&text=${encodeURIComponent(msg)}`,
           "_blank"
         );
-      }
-
-      function notificarGrupo(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*PROFESSOR:* ${
-          f.nome
-        }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
-          f.alertaAtivo
-        }\n\n_Mensagem via PONTO PRO v4.9_`;
-        navigator.clipboard.writeText(texto).then(() => {
-          alert("Texto copiado! Escolha o grupo e cole.");
-          window.open(
-            `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
-            "_blank"
-          );
-        });
-      }
-
-      function processarFuncionario() {
-        const id =
-          document.getElementById("editFuncId").value || Date.now().toString();
-        const fExistente = dadosFuncionarios.find((x) => x.id === id);
-        const nome = document.getElementById("formNome").value.toUpperCase();
-        const d = {
-          id: id,
-          vinculo: document.getElementById("formVinculo").value,
-          nome,
-          telefone: document.getElementById("formTelefone").value,
-          funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
-          veiculoModelo: document
-            .getElementById("formVeiculoModelo")
-            .value.toUpperCase(),
-          veiculoCor: document
-            .getElementById("formVeiculoCor")
-            .value.toUpperCase(),
-          alertaAtivo: document.getElementById("formAlerta").value,
-          historico: fExistente ? fExistente.historico || {} : {},
-        };
-        db.ref("funcionarios/" + id)
-          .set(d)
-          .then(() => {
-            registrarLog(`Adm alterou dados de: ${nome}`);
-            fecharModalCadastro();
-          });
-      }
-
-      function excluirFuncionario(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        if (confirm(`Deseja excluir ${f.nome}?`)) {
-          db.ref("funcionarios/" + id)
-            .remove()
-            .then(() => {
-              registrarLog(`Adm EXCLUIU o funcionário: ${f.nome}`);
-            });
-        }
-      }
-
-      function savePontoEditModal() {
-        const id = document.getElementById("modalFuncionarioId").value;
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const m = document
-          .getElementById("modalMarcacoes")
-          .value.split(",")
-          .map((t) => t.trim())
-          .filter((t) => t);
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
-          .update({ marcacoes: m, editado: true })
-          .then(() => {
-            registrarLog(
-              `Adm AJUSTOU ponto de: ${f.nome} em ${dataSelecionadaISO}`
-            );
-            closePontoEditModal();
-          });
-      }
-
-      function baterPonto(id) {
-        const agora = new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
-          .get()
-          .then((s) => {
-            let m = s.val() || [];
-            m.push(agora);
-            db.ref(
-              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
-            ).set(m);
-          });
-      }
-
-      function exportarPDFIndividual(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text(`Espelho de Ponto: ${f.nome}`, 14, 15);
-        doc.setFontSize(10);
-        doc.text(`Cargo: ${f.funcao} | Placa: ${f.placa || "-"}`, 14, 22);
-
-        const hist = f.historico || {};
-        const rows = Object.keys(hist)
-          .sort()
-          .reverse()
-          .map((data) => [
-            data.split("-").reverse().join("/"),
-            hist[data].marcacoes.join(" | "),
-          ]);
-
-        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 30 });
-        doc.save(`Ponto_${f.nome}.pdf`);
       }
 
       function renderizarCards() {
@@ -871,11 +733,11 @@
                     : "var(--text-sub)"
                 }">${status}</span>
               </div>
-              <div class="marcacoes-row">${
+              <div class="marcacoes-row" style="margin:10px 0">${
                 m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
                 "---"
               }</div>
-              <div style="display:flex; gap:5px">
+              <div style="display:flex; gap:8px">
                 ${
                   f.telefone
                     ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZapIndividual('${f.id}')">📱 Zap</button>`
@@ -888,15 +750,10 @@
                 }
               </div>
               <div class="smart-details">
-                <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
-                    <b>🚗 Veículo:</b> ${
-                      f.veiculoModelo || "-"
-                    } | <b>🎫 Placa:</b> ${f.placa || "-"}
-                </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
                   <button class="btn" style="background:#3498db; color:white" onclick="event.stopPropagation(); exportarPDFIndividual('${
                     f.id
-                  }')">📄 PDF Individual</button>
+                  }')">📄 PDF Ind.</button>
                   <button class="btn" style="background:#007bff; color:white" onclick="event.stopPropagation(); iniciarEdicaoPonto('${
                     f.id
                   }')">✏️ Ponto</button>
@@ -908,12 +765,95 @@
                   }')">🗑️ Excluir</button>
                 </div>
               </div>
-              <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px" onclick="event.stopPropagation(); baterPonto('${
+              <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px; padding:12px" onclick="event.stopPropagation(); baterPonto('${
                 f.id
               }')">REGISTRAR AGORA</button>
             </div>`;
           });
         atualizarDashboard();
+      }
+
+      function baterPonto(id) {
+        const agora = new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
+          .get()
+          .then((s) => {
+            let m = s.val() || [];
+            m.push(agora);
+            db.ref(
+              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
+            ).set(m);
+          });
+      }
+
+      function exportarPDFIndividual(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`Espelho de Ponto: ${f.nome}`, 14, 15);
+        const hist = f.historico || {};
+        const rows = Object.keys(hist)
+          .sort()
+          .reverse()
+          .map((data) => [
+            data.split("-").reverse().join("/"),
+            hist[data].marcacoes.join(" | "),
+          ]);
+        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 30 });
+        doc.save(`Ponto_${f.nome}.pdf`);
+      }
+
+      function processarFuncionario() {
+        const id =
+          document.getElementById("editFuncId").value || Date.now().toString();
+        const fExistente = dadosFuncionarios.find((x) => x.id === id);
+        const d = {
+          id: id,
+          vinculo: document.getElementById("formVinculo").value,
+          nome: document.getElementById("formNome").value.toUpperCase(),
+          telefone: document.getElementById("formTelefone").value,
+          funcao: document.getElementById("formFuncao").value.toUpperCase(),
+          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          veiculoModelo: document
+            .getElementById("formVeiculoModelo")
+            .value.toUpperCase(),
+          alertaAtivo: document.getElementById("formAlerta").value,
+          historico: fExistente ? fExistente.historico || {} : {},
+        };
+        db.ref("funcionarios/" + id)
+          .set(d)
+          .then(() => {
+            registrarLog(`Adm editou: ${d.nome}`);
+            fecharModalCadastro();
+          });
+      }
+
+      function excluirFuncionario(id) {
+        if (confirm("Excluir registro?")) {
+          db.ref("funcionarios/" + id)
+            .remove()
+            .then(() => registrarLog("Adm removeu registro"));
+        }
+      }
+
+      function validarGestor(cb) {
+        const s = localStorage.getItem(PASS_KEY) || "1234";
+        const t = prompt("Senha:");
+        if (t === s) cb();
+        else if (t !== null) alert("Erro!");
+      }
+
+      function salvarNovaSenha() {
+        const n = document.getElementById("inputNovaSenha").value;
+        if (n) {
+          localStorage.setItem(PASS_KEY, n);
+          alert("Salvo!");
+          document.getElementById("modalSenha").style.display = "none";
+        }
       }
 
       function renderizarPainelPresenca() {
@@ -929,7 +869,7 @@
               f.nome
             }</b><br><span class="local-timer" data-inicio="${
               m[m.length - 1]
-            }">...</span><br><small>${f.placa || "S/P"}</small></div>`;
+            }">...</span></div>`;
           }
         });
         c.innerText = count;
@@ -949,33 +889,12 @@
         });
       }
 
-      function validarGestor(cb) {
-        const s = localStorage.getItem(PASS_KEY) || "1234";
-        const t = prompt("Senha Admin:");
-        if (t === s) cb();
-        else if (t !== null) alert("Senha Incorreta!");
+      function abrirGerenciadorSenha() {
+        document.getElementById("modalSenha").style.display = "flex";
       }
-
-      function iniciarEdicaoCadastro(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("editFuncId").value = f.id;
-        document.getElementById("formNome").value = f.nome;
-        document.getElementById("formTelefone").value = f.telefone || "";
-        document.getElementById("formPlaca").value = f.placa || "";
-        document.getElementById("formAlerta").value = f.alertaAtivo || "";
-        document.getElementById("modalCadastro").style.display = "flex";
+      function abrirAuditoria() {
+        document.getElementById("auditoriaBox").style.display = "block";
       }
-
-      function iniciarEdicaoPonto(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("modalFuncionarioId").value = id;
-        document.getElementById("modalFuncionarioNome").innerText = f.nome;
-        document.getElementById("modalMarcacoes").value = (
-          f.historico?.[dataSelecionadaISO]?.marcacoes || []
-        ).join(", ");
-        document.getElementById("pontoEditModal").style.display = "flex";
-      }
-
       function abrirModalCadastro() {
         document.getElementById("editFuncId").value = "";
         document.getElementById("modalCadastro").style.display = "flex";
@@ -986,6 +905,97 @@
       function closePontoEditModal() {
         document.getElementById("pontoEditModal").style.display = "none";
       }
+      function iniciarEdicaoPonto(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        document.getElementById("modalFuncionarioId").value = id;
+        document.getElementById("modalFuncionarioNome").innerText = f.nome;
+        document.getElementById("modalMarcacoes").value = (
+          f.historico?.[dataSelecionadaISO]?.marcacoes || []
+        ).join(", ");
+        document.getElementById("pontoEditModal").style.display = "flex";
+      }
+      function savePontoEditModal() {
+        const id = document.getElementById("modalFuncionarioId").value;
+        const m = document
+          .getElementById("modalMarcacoes")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter((t) => t);
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
+          .update({ marcacoes: m })
+          .then(() => closePontoEditModal());
+      }
+      function iniciarEdicaoCadastro(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        document.getElementById("editFuncId").value = f.id;
+        document.getElementById("formNome").value = f.nome;
+        document.getElementById("formTelefone").value = f.telefone || "";
+        document.getElementById("formPlaca").value = f.placa || "";
+        document.getElementById("formAlerta").value = f.alertaAtivo || "";
+        document.getElementById("modalCadastro").style.display = "flex";
+      }
+
+      function exportarExcel() {
+        let csv = "\ufeffNome;Placa;Batidas\n";
+        dadosFuncionarios.forEach(
+          (f) =>
+            (csv += `${f.nome};${f.placa || ""};${(
+              f.historico?.[dataSelecionadaISO]?.marcacoes || []
+            ).join(" | ")}\n`)
+        );
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+        a.download = `ponto.csv`;
+        a.click();
+      }
+
+      function exportarPDFGeral() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("l");
+        doc.text(`Relatório - ${dataSelecionadaISO}`, 14, 15);
+        const rows = dadosFuncionarios.map((f) => [
+          f.nome,
+          f.placa || "-",
+          (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
+        ]);
+        doc.autoTable({
+          head: [["Nome", "Placa", "Batidas"]],
+          body: rows,
+          startY: 20,
+        });
+        doc.save(`Ponto_Geral.pdf`);
+      }
+
+      function fazerBackup() {
+        const b = new Blob(
+          [
+            JSON.stringify({
+              funcionarios: dadosFuncionarios,
+              auditoria: logsAuditoria,
+            }),
+          ],
+          { type: "application/json" }
+        );
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(b);
+        a.download = `backup_v4_9.json`;
+        a.click();
+      }
+
+      function importarJSON(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target.result);
+            if (confirm("Importar?")) db.ref("/").update(json);
+          } catch (err) {
+            alert("Erro!");
+          }
+        };
+        reader.readAsText(file);
+      }
+
       function switchTab(id, btn) {
         document
           .querySelectorAll(".tab-pane")
@@ -1003,7 +1013,6 @@
         dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
         renderizarCards();
       }
-
       function atualizarDashboard() {
         let ok = 0,
           pen = 0,
@@ -1019,67 +1028,6 @@
         document.getElementById("dashPresentes").innerText = ok;
         document.getElementById("dashPendentes").innerText = pen;
         document.getElementById("dashVazios").innerText = vaz;
-      }
-
-      function exportarExcel() {
-        let csv = "\ufeffNome;Placa;Batidas\n";
-        dadosFuncionarios.forEach((f) => {
-          csv += `${f.nome};${f.placa || ""};${(
-            f.historico?.[dataSelecionadaISO]?.marcacoes || []
-          ).join(" | ")}\n`;
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-        a.download = `ponto_${dataSelecionadaISO}.csv`;
-        a.click();
-      }
-
-      function exportarPDFGeral() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF("l");
-        doc.text(`Relatório Geral - ${dataSelecionadaISO}`, 14, 15);
-        const rows = dadosFuncionarios.map((f) => [
-          f.nome,
-          f.placa || "-",
-          (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
-        ]);
-        doc.autoTable({
-          head: [["Nome", "Placa", "Batidas"]],
-          body: rows,
-          startY: 20,
-        });
-        doc.save(`Ponto_Geral_${dataSelecionadaISO}.pdf`);
-      }
-
-      function fazerBackup() {
-        const b = new Blob(
-          [
-            JSON.stringify({
-              funcionarios: dadosFuncionarios,
-              auditoria: logsAuditoria,
-            }),
-          ],
-          { type: "application/json" }
-        );
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(b);
-        a.download = `backup_ponto_pro.json`;
-        a.click();
-      }
-
-      function importarJSON(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const json = JSON.parse(e.target.result);
-            if (confirm("Importar dados? Isso substituirá a base atual."))
-              db.ref("/").update(json);
-          } catch (err) {
-            alert("Arquivo inválido!");
-          }
-        };
-        reader.readAsText(file);
       }
 
       setInterval(atualizarCronometros, 1000);
