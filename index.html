@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.3</title>
+    <title>PONTO PRO v4.4</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -119,6 +119,14 @@
         font-size: 11px;
         font-weight: bold;
         border: 1px solid var(--border);
+        position: relative;
+      }
+      .edited-badge {
+        font-size: 8px;
+        color: var(--danger);
+        font-weight: bold;
+        margin-top: 2px;
+        display: block;
       }
       .smart-details {
         max-height: 0;
@@ -207,26 +215,16 @@
         overflow-y: auto;
         max-height: 90vh;
       }
-
-      /* ESTILO CAIXINHA LOCAL v4.3 */
       .local-card {
         background: var(--local-bg);
         border: 2px solid var(--success);
         padding: 12px;
         border-radius: 12px;
         text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
       }
       .local-card b {
         color: var(--success);
         font-size: 15px;
-        display: block;
-        margin-bottom: 2px;
-      }
-      .local-card small {
-        color: var(--text-main);
-        font-weight: bold;
-        opacity: 0.8;
         display: block;
       }
       .local-timer {
@@ -238,7 +236,6 @@
         font-size: 11px;
         margin-top: 8px;
         display: inline-block;
-        font-weight: bold;
       }
       .local-veiculo-info {
         font-size: 10px;
@@ -247,21 +244,13 @@
         border-top: 1px dashed var(--success);
         color: var(--text-sub);
       }
-      .local-placa-tag {
-        background: #2d3436;
-        color: white;
-        padding: 1px 5px;
-        border-radius: 4px;
-        font-size: 9px;
-        font-weight: bold;
-      }
     </style>
   </head>
   <body>
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.3</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.4</small>
         </h1>
         <input
           type="date"
@@ -320,7 +309,7 @@
 
       <section id="tab-local" class="tab-pane">
         <h3 style="display: flex; align-items: center; gap: 10px">
-          📍 Gestão de Pátio / Local
+          📍 Local / Pátio
           <span
             id="countLocal"
             style="
@@ -344,7 +333,7 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas v4.3</h3>
+        <h3>⚙️ Ferramentas v4.4</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
@@ -365,7 +354,7 @@
             style="background: #2d3436; color: white"
             onclick="validarGestor(fazerBackup)"
           >
-            💾 Backup Completo
+            💾 Backup JSON
           </button>
           <button
             class="btn"
@@ -386,7 +375,7 @@
             style="background: #6f42c1; color: white"
             onclick="gerenciarSenha()"
           >
-            🔑 Alterar Senha
+            🔑 Senha Admin
           </button>
         </div>
       </section>
@@ -437,10 +426,9 @@
             type="text"
             id="formPlaca"
             class="search-input"
-            placeholder="Placa (Ex: ABC1234)"
+            placeholder="Placa"
             oninput="aplicarMascaraPlaca(this)"
             maxlength="8"
-            style="margin-top: 5px"
           />
           <input
             type="text"
@@ -452,14 +440,14 @@
             type="text"
             id="formVeiculoCor"
             class="search-input"
-            placeholder="Cor do Veículo"
+            placeholder="Cor"
           />
         </div>
         <input
           type="text"
           id="formObs"
           class="search-input"
-          placeholder="Observação Geral"
+          placeholder="Observação"
         />
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
@@ -477,6 +465,9 @@
     <div id="pontoEditModal">
       <div class="modal-box">
         <h3 id="modalFuncionarioNome">Editar Ponto</h3>
+        <p style="font-size: 10px; color: var(--danger)">
+          * Alterações manuais serão marcadas como "Editado".
+        </p>
         <input
           type="text"
           id="modalMarcacoes"
@@ -492,7 +483,7 @@
             style="background: var(--success); color: white"
             onclick="savePontoEditModal()"
           >
-            Salvar
+            Confirmar Edição
           </button>
         </div>
       </div>
@@ -552,13 +543,6 @@
 
         dadosFuncionarios
           .filter((f) => {
-            const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-            const status =
-              m.length === 0
-                ? "VAZIO"
-                : m.length % 2 !== 0
-                ? "PENDENTE"
-                : "FECHADO";
             return (
               f.nome.toUpperCase().includes(busca) ||
               f.funcao.toUpperCase().includes(busca) ||
@@ -566,7 +550,8 @@
             );
           })
           .forEach((f) => {
-            const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
+            const histDia = f.historico?.[dataSelecionadaISO] || {};
+            const m = histDia.marcacoes || [];
             const status =
               m.length === 0
                 ? "VAZIO"
@@ -579,6 +564,9 @@
                 : status === "PENDENTE"
                 ? "var(--warning)"
                 : "var(--text-sub)";
+            const editado = histDia.editado
+              ? '<span class="edited-badge">✏️ Editado pelo Adm</span>'
+              : "";
 
             container.innerHTML += `
             <div class="emp-card" onclick="this.classList.toggle('open')">
@@ -588,17 +576,18 @@
             }</small></div>
                 <span class="status-pill" style="background:${corStatus}">${status}</span>
               </div>
-              <div class="marcacoes-row">${
-                m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
-                "---"
-              }</div>
+              <div class="marcacoes-row">
+                ${
+                  m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
+                  "---"
+                }
+              </div>
+              ${editado}
               <div class="smart-details">
                 <div style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px">
                     <b>🚗 Veículo:</b> ${f.veiculoModelo || "-"} (${
               f.veiculoCor || "-"
-            })<br>
-                    <b>🎫 Placa:</b> ${f.placa || "-"}<br>
-                    <b>📝 Obs:</b> ${f.observacao || "-"}
+            }) | <b>🎫 Placa:</b> ${f.placa || "-"}
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
                   <button class="btn" style="background:#17a2b8; color:white" onclick="event.stopPropagation(); gerarFolhaIndividual('${
@@ -637,16 +626,12 @@
             p.innerHTML += `
               <div class="local-card">
                 <b>${f.nome}</b>
-                <small>${f.funcao}</small>
                 <span class="local-timer" data-inicio="${primeiraBatida}">...</span>
                 <div class="local-veiculo-info">
-                   <span class="local-placa-tag">${
+                   <span style="background:#2d3436;color:white;padding:2px 4px;border-radius:3px">${
                      f.placa || "S/ PLACA"
                    }</span><br>
-                   <span style="font-weight:900">${
-                     f.veiculoModelo || "Veículo não cadastrado"
-                   }</span><br>
-                   <span>${f.veiculoCor || ""}</span>
+                   <b>${f.veiculoModelo || "Veículo"}</b>
                 </div>
               </div>`;
           }
@@ -667,6 +652,41 @@
           const seg = String(diff % 60).padStart(2, "0");
           t.innerText = `${hrs}:${min}:${seg}`;
         });
+      }
+
+      function savePontoEditModal() {
+        const id = document.getElementById("modalFuncionarioId").value;
+        const m = document
+          .getElementById("modalMarcacoes")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter((t) => t);
+        // Salvamos com a flag "editado: true" para auditoria
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
+          .set({
+            marcacoes: m,
+            editado: true,
+            ultimaAlteracao: new Date().toLocaleString(),
+          })
+          .then(() => closePontoEditModal());
+      }
+
+      function baterPonto(id) {
+        const agora = new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
+          .get()
+          .then((s) => {
+            let m = s.val() || [];
+            m.push(agora);
+            // Batida normal em tempo real NÃO marca como editado
+            db.ref(
+              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
+            ).set(m);
+          });
       }
 
       function processarFuncionario() {
@@ -690,23 +710,6 @@
         db.ref("funcionarios/" + id)
           .set(d)
           .then(() => fecharModalCadastro());
-      }
-
-      function baterPonto(id) {
-        const agora = new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
-          .get()
-          .then((s) => {
-            let m = s.val() || [];
-            m.push(agora);
-            db.ref(
-              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
-            ).set(m);
-          });
       }
 
       function validarGestor(cb) {
@@ -746,18 +749,6 @@
           f.historico?.[dataSelecionadaISO]?.marcacoes || []
         ).join(", ");
         document.getElementById("pontoEditModal").style.display = "flex";
-      }
-
-      function savePontoEditModal() {
-        const id = document.getElementById("modalFuncionarioId").value;
-        const m = document
-          .getElementById("modalMarcacoes")
-          .value.split(",")
-          .map((t) => t.trim())
-          .filter((t) => t);
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
-          .update({ marcacoes: m, editado: true })
-          .then(() => closePontoEditModal());
       }
 
       function abrirModalCadastro() {
@@ -825,12 +816,12 @@
       }
 
       function exportarExcel() {
-        let csv = "\ufeffNome;Cargo;Placa;Modelo;Cor;Batidas\n";
+        let csv = "\ufeffNome;Cargo;Placa;Editado;Batidas\n";
         dadosFuncionarios.forEach((f) => {
-          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
+          const hist = f.historico?.[dataSelecionadaISO] || {};
           csv += `${f.nome};${f.funcao};${f.placa || ""};${
-            f.veiculoModelo || ""
-          };${f.veiculoCor || ""};${m.join(" | ")}\n`;
+            hist.editado ? "Sim" : "Não"
+          };${(hist.marcacoes || []).join(" | ")}\n`;
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
@@ -844,12 +835,12 @@
         doc.text(`Relatório Geral - ${dataSelecionadaISO}`, 14, 15);
         const rows = dadosFuncionarios.map((f) => [
           f.nome,
-          f.funcao,
           f.placa || "-",
+          f.historico?.[dataSelecionadaISO]?.editado ? "SIM" : "NÃO",
           (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
         ]);
         doc.autoTable({
-          head: [["Nome", "Cargo", "Placa", "Batidas"]],
+          head: [["Nome", "Placa", "Editado", "Batidas"]],
           body: rows,
           startY: 20,
         });
@@ -861,13 +852,19 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         doc.text(`Folha de Ponto: ${f.nome}`, 14, 15);
+        const hist = f.historico?.[dataSelecionadaISO] || {};
         const rows = [
           [
             dataSelecionadaISO,
-            (f.historico?.[dataSelecionadaISO]?.marcacoes || []).join(" | "),
+            hist.editado ? "SIM" : "NÃO",
+            (hist.marcacoes || []).join(" | "),
           ],
         ];
-        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 25 });
+        doc.autoTable({
+          head: [["Data", "Ajuste Adm", "Batidas"]],
+          body: rows,
+          startY: 25,
+        });
         doc.save(`Folha_${f.nome}.pdf`);
       }
 
@@ -877,7 +874,7 @@
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_v4_3.json`;
+        a.download = `backup_v4_4.json`;
         a.click();
       }
 
