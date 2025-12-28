@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.9</title>
+    <title>PONTO PRO v5.0</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -305,7 +305,7 @@
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.9</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v5.0</small>
         </h1>
         <input
           type="date"
@@ -376,7 +376,7 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas v4.9</h3>
+        <h3>⚙️ Ferramentas v5.0</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
@@ -499,17 +499,32 @@
           class="search-input"
           placeholder="Modelo do Veículo"
         />
+
         <label
           style="font-size: 10px; font-weight: bold; color: var(--alert-color)"
-          >⚠️ ALERTA ATIVO</label
+          >⚠️ SELECIONE OU ESCREVA O ALERTA</label
         >
-        <select id="formAlerta" class="search-input">
-          <option value="">NENHUM</option>
-          <option value="FAROL ACESO">💡 FAROL ACESO</option>
-          <option value="VIDRO ABERTO">🪟 VIDRO ABERTO</option>
-          <option value="BLOQUEANDO SAÍDA">🚫 BLOQUEANDO SAÍDA</option>
-          <option value="CHAVE NO CONTATO">🔑 CHAVE NO CONTATO</option>
-        </select>
+        <input
+          list="listaAlertas"
+          id="formAlerta"
+          class="search-input"
+          placeholder="Nenhum alerta ativo"
+        />
+        <datalist id="listaAlertas">
+          <option value="POLÍCIA MILITAR">🚓 POLÍCIA MILITAR</option>
+          <option value="FAROL LIGADO">💡 FAROL LIGADO</option>
+          <option value="OBSTRUÇÃO DE PASSAGEM">
+            🚫 OBSTRUÇÃO DE PASSAGEM
+          </option>
+          <option value="AGENTE DE INCLUSÃO SOCIAL">
+            🤝 AGENTE DE INCLUSÃO SOCIAL
+          </option>
+          <option value="SUPERVISOR JUMPER">⚡ SUPERVISOR JUMPER</option>
+          <option value="SUPERVISOR EMPRESA DE LIMPEZA">
+            🧹 SUPERVISOR EMPRESA DE LIMPEZA
+          </option>
+        </datalist>
+
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
           <button
@@ -645,41 +660,21 @@
 
       function notificarGrupo(id) {
         const f = dadosFuncionarios.find((x) => x.id === id);
-        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*PROFESSOR:* ${
+        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*NOME:* ${
           f.nome
         }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
           f.alertaAtivo
-        }\n\n_PONTO PRO v4.9_`;
-
-        // No celular, o Clipboard API às vezes falha em elementos que não são input.
-        // Criamos um elemento temporário para garantir a cópia.
+        }\n\n_PONTO PRO v5.0_`;
         const el = document.createElement("textarea");
         el.value = texto;
         document.body.appendChild(el);
         el.select();
-        el.setSelectionRange(0, 99999);
         document.execCommand("copy");
         document.body.removeChild(el);
-
         alert("Mensagem copiada! Abrindo o WhatsApp...");
-
-        // Abre o link direto do WhatsApp (funciona melhor em celular)
-        const url = `whatsapp://send?text=${encodeURIComponent(texto)}`;
-        window.location.href = url;
-
-        // Fallback caso o whatsapp:// não funcione
-        setTimeout(() => {
-          if (
-            confirm(
-              "Se o WhatsApp não abriu, clique em OK para tentar via Web."
-            )
-          ) {
-            window.open(
-              `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
-              "_blank"
-            );
-          }
-        }, 1500);
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(
+          texto
+        )}`;
       }
 
       function enviarZapIndividual(id) {
@@ -721,7 +716,7 @@
               f.alertaAtivo ? "has-alert" : ""
             }" onclick="this.classList.toggle('open')">
               <span class="badge-vinculo" style="background:#636e72">${
-                f.vinculo || "PROFESSOR"
+                f.vinculo || "COLABORADOR"
               }</span>
               <div style="display:flex; justify-content:space-between; align-items:center">
                 <div><b>${f.nome}</b><br><small>${f.funcao}</small></div>
@@ -821,7 +816,9 @@
           veiculoModelo: document
             .getElementById("formVeiculoModelo")
             .value.toUpperCase(),
-          alertaAtivo: document.getElementById("formAlerta").value,
+          alertaAtivo: document
+            .getElementById("formAlerta")
+            .value.toUpperCase(),
           historico: fExistente ? fExistente.historico || {} : {},
         };
         db.ref("funcionarios/" + id)
@@ -897,6 +894,12 @@
       }
       function abrirModalCadastro() {
         document.getElementById("editFuncId").value = "";
+        document.getElementById("formNome").value = "";
+        document.getElementById("formTelefone").value = "";
+        document.getElementById("formFuncao").value = "";
+        document.getElementById("formPlaca").value = "";
+        document.getElementById("formVeiculoModelo").value = "";
+        document.getElementById("formAlerta").value = "";
         document.getElementById("modalCadastro").style.display = "flex";
       }
       function fecharModalCadastro() {
@@ -930,7 +933,10 @@
         document.getElementById("editFuncId").value = f.id;
         document.getElementById("formNome").value = f.nome;
         document.getElementById("formTelefone").value = f.telefone || "";
+        document.getElementById("formFuncao").value = f.funcao || "";
         document.getElementById("formPlaca").value = f.placa || "";
+        document.getElementById("formVeiculoModelo").value =
+          f.veiculoModelo || "";
         document.getElementById("formAlerta").value = f.alertaAtivo || "";
         document.getElementById("modalCadastro").style.display = "flex";
       }
@@ -978,7 +984,7 @@
         );
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_v4_9.json`;
+        a.download = `backup_v5_0.json`;
         a.click();
       }
 
@@ -1029,7 +1035,6 @@
         document.getElementById("dashPendentes").innerText = pen;
         document.getElementById("dashVazios").innerText = vaz;
       }
-
       setInterval(atualizarCronometros, 1000);
       document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
     </script>
