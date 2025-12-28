@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v5.0</title>
+    <title>PONTO PRO v5.1</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -305,7 +305,7 @@
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v5.0</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v5.1</small>
         </h1>
         <input
           type="date"
@@ -376,7 +376,7 @@
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas v5.0</h3>
+        <h3>⚙️ Ferramentas v5.1</h3>
         <div style="display: grid; gap: 10px">
           <button
             class="btn"
@@ -664,7 +664,7 @@
           f.nome
         }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
           f.alertaAtivo
-        }\n\n_PONTO PRO v5.0_`;
+        }\n\n_PONTO PRO v5.1_`;
         const el = document.createElement("textarea");
         el.value = texto;
         document.body.appendChild(el);
@@ -719,7 +719,13 @@
                 f.vinculo || "COLABORADOR"
               }</span>
               <div style="display:flex; justify-content:space-between; align-items:center">
-                <div><b>${f.nome}</b><br><small>${f.funcao}</small></div>
+                <div>
+                   <b style="font-size:15px">${f.nome}</b> 
+                   <span style="color:var(--primary); font-weight:bold; margin-left:5px">[${
+                     f.placa || "S/P"
+                   }]</span>
+                   <br><small>${f.funcao}</small>
+                </div>
                 <span class="status-pill" style="background:${
                   status === "FECHADO"
                     ? "var(--success)"
@@ -984,7 +990,7 @@
         );
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup_v5_0.json`;
+        a.download = `backup_v5_1.json`;
         a.click();
       }
 
