@@ -51,6 +51,48 @@
         transition: background 0.3s;
       }
 
+      /* Notificação Toast */
+      #toast {
+        visibility: hidden;
+        min-width: 280px;
+        background-color: #2d3436;
+        color: #fff;
+        text-align: center;
+        border-radius: 12px;
+        padding: 16px;
+        position: fixed;
+        z-index: 10000;
+        left: 50%;
+        bottom: 80px;
+        transform: translateX(-50%);
+        font-weight: 500;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      }
+      #toast.show {
+        visibility: visible;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      }
+      @keyframes fadein {
+        from {
+          bottom: 0;
+          opacity: 0;
+        }
+        to {
+          bottom: 80px;
+          opacity: 1;
+        }
+      }
+      @keyframes fadeout {
+        from {
+          bottom: 80px;
+          opacity: 1;
+        }
+        to {
+          bottom: 0;
+          opacity: 0;
+        }
+      }
+
       .app-header {
         position: sticky;
         top: 0;
@@ -302,6 +344,8 @@
     </style>
   </head>
   <body>
+    <div id="toast">✅ Operação realizada!</div>
+
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
@@ -499,7 +543,6 @@
           class="search-input"
           placeholder="Modelo do Veículo"
         />
-
         <label
           style="font-size: 10px; font-weight: bold; color: var(--alert-color)"
           >⚠️ SELECIONE OU ESCREVA O ALERTA</label
@@ -524,7 +567,6 @@
             🧹 SUPERVISOR EMPRESA DE LIMPEZA
           </option>
         </datalist>
-
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
           <button
@@ -607,8 +649,13 @@
       let dataSelecionadaISO = new Date().toISOString().slice(0, 10);
       const PASS_KEY = "ponto_admin_pass";
 
+      // Monitoramento Central do Firebase
       db.ref("funcionarios").on("value", (s) => {
-        dadosFuncionarios = s.val() ? Object.values(s.val()) : [];
+        const val = s.val();
+        // Correção de mapeamento de ID para evitar erros de registro
+        dadosFuncionarios = val
+          ? Object.keys(val).map((k) => ({ ...val[k], id: k }))
+          : [];
         renderizarCards();
         renderizarPainelPresenca();
       });
@@ -634,6 +681,15 @@
         db.ref("auditoria").push({ data, acao: msg });
       }
 
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.innerText = msg;
+        t.className = "show";
+        setTimeout(() => {
+          t.className = t.className.replace("show", "");
+        }, 3000);
+      }
+
       function aplicarMascaraTelefone(i) {
         let v = i.value.replace(/\D/g, "");
         if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
@@ -642,15 +698,11 @@
       }
 
       function aplicarMascaraPlaca(i) {
-        // Remove qualquer caractere que não seja letra ou número e transforma em maiúsculo
         let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-
-        // Se for o formato antigo (3 letras + 4 números), coloca o hífen para facilitar a leitura
-        // Se for o formato Mercosul, ele mantém os 7 caracteres alfanuméricos sem interferir
+        // Suporte para padrão antigo AAA-0000 e Mercosul AAA0A00
         if (v.length === 7 && /^[A-Z]{3}[0-9]{4}$/.test(v)) {
           v = v.substring(0, 3) + "-" + v.substring(3, 7);
         }
-
         i.value = v;
       }
 
@@ -671,17 +723,19 @@
           f.nome
         }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
           f.alertaAtivo
-        }\n\n_PONTO PRO v5.1_ SISTEMA CRIADO E DESENVOLVIDO POR RODRIGO L SANTOS - DEVELOPER_`;
+        }\n\n_PONTO PRO v5.1 - SISTEMA CRIADO E DESENVOLVIDO POR RODRIGO DEV._`;
         const el = document.createElement("textarea");
         el.value = texto;
         document.body.appendChild(el);
         el.select();
         document.execCommand("copy");
         document.body.removeChild(el);
-        alert("Mensagem copiada! Abrindo o WhatsApp...");
-        window.location.href = `whatsapp://send?text=${encodeURIComponent(
-          texto
-        )}`;
+        showToast("✅ Copiado! Abrindo WhatsApp...");
+        setTimeout(() => {
+          window.location.href = `whatsapp://send?text=${encodeURIComponent(
+            texto
+          )}`;
+        }, 600);
       }
 
       function enviarZapIndividual(id) {
@@ -698,6 +752,25 @@
           )}&text=${encodeURIComponent(msg)}`,
           "_blank"
         );
+      }
+
+      // CORREÇÃO: Função Bater Ponto Corrigida
+      function baterPonto(id) {
+        const agora = new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        const ref = db.ref(
+          `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
+        );
+        ref.get().then((s) => {
+          let m = s.val() || [];
+          m.push(agora);
+          ref.set(m).then(() => {
+            showToast("⏰ Ponto registrado com sucesso!");
+          });
+        });
       }
 
       function renderizarCards() {
@@ -781,91 +854,7 @@
         atualizarDashboard();
       }
 
-      function baterPonto(id) {
-        const agora = new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
-          .get()
-          .then((s) => {
-            let m = s.val() || [];
-            m.push(agora);
-            db.ref(
-              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
-            ).set(m);
-          });
-      }
-
-      function exportarPDFIndividual(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text(`Espelho de Ponto: ${f.nome}`, 14, 15);
-        const hist = f.historico || {};
-        const rows = Object.keys(hist)
-          .sort()
-          .reverse()
-          .map((data) => [
-            data.split("-").reverse().join("/"),
-            hist[data].marcacoes.join(" | "),
-          ]);
-        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 30 });
-        doc.save(`Ponto_${f.nome}.pdf`);
-      }
-
-      function processarFuncionario() {
-        const id =
-          document.getElementById("editFuncId").value || Date.now().toString();
-        const fExistente = dadosFuncionarios.find((x) => x.id === id);
-        const d = {
-          id: id,
-          vinculo: document.getElementById("formVinculo").value,
-          nome: document.getElementById("formNome").value.toUpperCase(),
-          telefone: document.getElementById("formTelefone").value,
-          funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
-          veiculoModelo: document
-            .getElementById("formVeiculoModelo")
-            .value.toUpperCase(),
-          alertaAtivo: document
-            .getElementById("formAlerta")
-            .value.toUpperCase(),
-          historico: fExistente ? fExistente.historico || {} : {},
-        };
-        db.ref("funcionarios/" + id)
-          .set(d)
-          .then(() => {
-            registrarLog(`Adm editou: ${d.nome}`);
-            fecharModalCadastro();
-          });
-      }
-
-      function excluirFuncionario(id) {
-        if (confirm("Excluir registro?")) {
-          db.ref("funcionarios/" + id)
-            .remove()
-            .then(() => registrarLog("Adm removeu registro"));
-        }
-      }
-
-      function validarGestor(cb) {
-        const s = localStorage.getItem(PASS_KEY) || "1234";
-        const t = prompt("Senha:");
-        if (t === s) cb();
-        else if (t !== null) alert("Erro!");
-      }
-
-      function salvarNovaSenha() {
-        const n = document.getElementById("inputNovaSenha").value;
-        if (n) {
-          localStorage.setItem(PASS_KEY, n);
-          alert("Salvo!");
-          document.getElementById("modalSenha").style.display = "none";
-        }
-      }
-
+      // CORREÇÃO: Função Aba Local corrigida para mostrar nome
       function renderizarPainelPresenca() {
         const p = document.getElementById("presencePanel");
         const c = document.getElementById("countLocal");
@@ -875,11 +864,16 @@
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
           if (m.length % 2 !== 0) {
             count++;
-            p.innerHTML += `<div class="local-card"><b>${
-              f.nome
-            }</b><br><span class="local-timer" data-inicio="${
-              m[m.length - 1]
-            }">...</span></div>`;
+            p.innerHTML += `
+              <div class="local-card">
+                <b>${f.nome || "DESCONHECIDO"}</b><br>
+                <small style="color:var(--primary)">[${
+                  f.placa || "S/P"
+                }]</small><br>
+                <span class="local-timer" data-inicio="${
+                  m[m.length - 1]
+                }">...</span>
+              </div>`;
           }
         });
         c.innerText = count;
@@ -899,59 +893,31 @@
         });
       }
 
-      function abrirGerenciadorSenha() {
-        document.getElementById("modalSenha").style.display = "flex";
-      }
-      function abrirAuditoria() {
-        document.getElementById("auditoriaBox").style.display = "block";
-      }
-      function abrirModalCadastro() {
-        document.getElementById("editFuncId").value = "";
-        document.getElementById("formNome").value = "";
-        document.getElementById("formTelefone").value = "";
-        document.getElementById("formFuncao").value = "";
-        document.getElementById("formPlaca").value = "";
-        document.getElementById("formVeiculoModelo").value = "";
-        document.getElementById("formAlerta").value = "";
-        document.getElementById("modalCadastro").style.display = "flex";
-      }
-      function fecharModalCadastro() {
-        document.getElementById("modalCadastro").style.display = "none";
-      }
-      function closePontoEditModal() {
-        document.getElementById("pontoEditModal").style.display = "none";
-      }
-      function iniciarEdicaoPonto(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("modalFuncionarioId").value = id;
-        document.getElementById("modalFuncionarioNome").innerText = f.nome;
-        document.getElementById("modalMarcacoes").value = (
-          f.historico?.[dataSelecionadaISO]?.marcacoes || []
-        ).join(", ");
-        document.getElementById("pontoEditModal").style.display = "flex";
-      }
-      function savePontoEditModal() {
-        const id = document.getElementById("modalFuncionarioId").value;
-        const m = document
-          .getElementById("modalMarcacoes")
-          .value.split(",")
-          .map((t) => t.trim())
-          .filter((t) => t);
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
-          .update({ marcacoes: m })
-          .then(() => closePontoEditModal());
-      }
-      function iniciarEdicaoCadastro(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("editFuncId").value = f.id;
-        document.getElementById("formNome").value = f.nome;
-        document.getElementById("formTelefone").value = f.telefone || "";
-        document.getElementById("formFuncao").value = f.funcao || "";
-        document.getElementById("formPlaca").value = f.placa || "";
-        document.getElementById("formVeiculoModelo").value =
-          f.veiculoModelo || "";
-        document.getElementById("formAlerta").value = f.alertaAtivo || "";
-        document.getElementById("modalCadastro").style.display = "flex";
+      function processarFuncionario() {
+        const id =
+          document.getElementById("editFuncId").value || Date.now().toString();
+        const fExistente = dadosFuncionarios.find((x) => x.id === id);
+        const d = {
+          nome: document.getElementById("formNome").value.toUpperCase(),
+          vinculo: document.getElementById("formVinculo").value,
+          telefone: document.getElementById("formTelefone").value,
+          funcao: document.getElementById("formFuncao").value.toUpperCase(),
+          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          veiculoModelo: document
+            .getElementById("formVeiculoModelo")
+            .value.toUpperCase(),
+          alertaAtivo: document
+            .getElementById("formAlerta")
+            .value.toUpperCase(),
+          historico: fExistente ? fExistente.historico || {} : {},
+        };
+        db.ref("funcionarios/" + id)
+          .set(d)
+          .then(() => {
+            registrarLog(`Adm editou: ${d.nome}`);
+            fecharModalCadastro();
+            showToast("✅ Dados salvos!");
+          });
       }
 
       function exportarExcel() {
@@ -983,6 +949,47 @@
           startY: 20,
         });
         doc.save(`Ponto_Geral.pdf`);
+      }
+
+      function exportarPDFIndividual(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`Espelho de Ponto: ${f.nome}`, 14, 15);
+        const hist = f.historico || {};
+        const rows = Object.keys(hist)
+          .sort()
+          .reverse()
+          .map((data) => [
+            data.split("-").reverse().join("/"),
+            hist[data].marcacoes.join(" | "),
+          ]);
+        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 30 });
+        doc.save(`Ponto_${f.nome}.pdf`);
+      }
+
+      function excluirFuncionario(id) {
+        if (confirm("Excluir registro?")) {
+          db.ref("funcionarios/" + id)
+            .remove()
+            .then(() => registrarLog("Adm removeu registro"));
+        }
+      }
+
+      function validarGestor(cb) {
+        const s = localStorage.getItem(PASS_KEY) || "1234";
+        const t = prompt("Senha:");
+        if (t === s) cb();
+        else if (t !== null) alert("Erro!");
+      }
+
+      function salvarNovaSenha() {
+        const n = document.getElementById("inputNovaSenha").value;
+        if (n) {
+          localStorage.setItem(PASS_KEY, n);
+          alert("Salvo!");
+          document.getElementById("modalSenha").style.display = "none";
+        }
       }
 
       function fazerBackup() {
@@ -1025,13 +1032,17 @@
         document.getElementById(id).classList.add("active");
         btn.classList.add("active");
       }
+
       function toggleDarkMode() {
         document.body.classList.toggle("dark-mode");
       }
+
       function atualizarDataFiltro() {
         dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
         renderizarCards();
+        renderizarPainelPresenca();
       }
+
       function atualizarDashboard() {
         let ok = 0,
           pen = 0,
@@ -1048,6 +1059,66 @@
         document.getElementById("dashPendentes").innerText = pen;
         document.getElementById("dashVazios").innerText = vaz;
       }
+
+      function abrirGerenciadorSenha() {
+        document.getElementById("modalSenha").style.display = "flex";
+      }
+      function abrirAuditoria() {
+        document.getElementById("auditoriaBox").style.display = "block";
+      }
+      function fecharModalCadastro() {
+        document.getElementById("modalCadastro").style.display = "none";
+      }
+      function closePontoEditModal() {
+        document.getElementById("pontoEditModal").style.display = "none";
+      }
+
+      function abrirModalCadastro() {
+        document.getElementById("editFuncId").value = "";
+        document.getElementById("formNome").value = "";
+        document.getElementById("formTelefone").value = "";
+        document.getElementById("formFuncao").value = "";
+        document.getElementById("formPlaca").value = "";
+        document.getElementById("formVeiculoModelo").value = "";
+        document.getElementById("formAlerta").value = "";
+        document.getElementById("modalCadastro").style.display = "flex";
+      }
+
+      function iniciarEdicaoPonto(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        document.getElementById("modalFuncionarioId").value = id;
+        document.getElementById("modalFuncionarioNome").innerText = f.nome;
+        document.getElementById("modalMarcacoes").value = (
+          f.historico?.[dataSelecionadaISO]?.marcacoes || []
+        ).join(", ");
+        document.getElementById("pontoEditModal").style.display = "flex";
+      }
+
+      function savePontoEditModal() {
+        const id = document.getElementById("modalFuncionarioId").value;
+        const m = document
+          .getElementById("modalMarcacoes")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter((t) => t);
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
+          .update({ marcacoes: m })
+          .then(() => closePontoEditModal());
+      }
+
+      function iniciarEdicaoCadastro(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        document.getElementById("editFuncId").value = f.id;
+        document.getElementById("formNome").value = f.nome;
+        document.getElementById("formTelefone").value = f.telefone || "";
+        document.getElementById("formFuncao").value = f.funcao || "";
+        document.getElementById("formPlaca").value = f.placa || "";
+        document.getElementById("formVeiculoModelo").value =
+          f.veiculoModelo || "";
+        document.getElementById("formAlerta").value = f.alertaAtivo || "";
+        document.getElementById("modalCadastro").style.display = "flex";
+      }
+
       setInterval(atualizarCronometros, 1000);
       document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
     </script>
