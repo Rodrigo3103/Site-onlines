@@ -642,8 +642,15 @@
       }
 
       function aplicarMascaraPlaca(i) {
+        // Remove qualquer caractere que não seja letra ou número e transforma em maiúsculo
         let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-        if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
+
+        // Se for o formato antigo (3 letras + 4 números), coloca o hífen para facilitar a leitura
+        // Se for o formato Mercosul, ele mantém os 7 caracteres alfanuméricos sem interferir
+        if (v.length === 7 && /^[A-Z]{3}[0-9]{4}$/.test(v)) {
+          v = v.substring(0, 3) + "-" + v.substring(3, 7);
+        }
+
         i.value = v;
       }
 
