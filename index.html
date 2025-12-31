@@ -652,7 +652,6 @@
       // Monitoramento Central do Firebase
       db.ref("funcionarios").on("value", (s) => {
         const val = s.val();
-        // Correção de mapeamento de ID para evitar erros de registro
         dadosFuncionarios = val
           ? Object.keys(val).map((k) => ({ ...val[k], id: k }))
           : [];
@@ -699,7 +698,6 @@
 
       function aplicarMascaraPlaca(i) {
         let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-        // Suporte para padrão antigo AAA-0000 e Mercosul AAA0A00
         if (v.length === 7 && /^[A-Z]{3}[0-9]{4}$/.test(v)) {
           v = v.substring(0, 3) + "-" + v.substring(3, 7);
         }
@@ -754,7 +752,6 @@
         );
       }
 
-      // CORREÇÃO: Função Bater Ponto Corrigida
       function baterPonto(id) {
         const agora = new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
@@ -841,9 +838,9 @@
                   <button class="btn" style="background:var(--text-sub); color:white" onclick="event.stopPropagation(); iniciarEdicaoCadastro('${
                     f.id
                   }')">⚙️ Dados</button>
-                  <button class="btn" style="background:var(--danger); color:white" onclick="event.stopPropagation(); excluirFuncionario('${
+                  <button class="btn" style="background:var(--danger); color:white" onclick="event.stopPropagation(); validarGestor(() => excluirFuncionario('${
                     f.id
-                  }')">🗑️ Excluir</button>
+                  }'))">🗑️ Excluir</button>
                 </div>
               </div>
               <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px; padding:12px" onclick="event.stopPropagation(); baterPonto('${
@@ -854,7 +851,6 @@
         atualizarDashboard();
       }
 
-      // CORREÇÃO: Função Aba Local corrigida para mostrar nome
       function renderizarPainelPresenca() {
         const p = document.getElementById("presencePanel");
         const c = document.getElementById("countLocal");
@@ -968,26 +964,36 @@
         doc.save(`Ponto_${f.nome}.pdf`);
       }
 
+      // MODIFICAÇÃO: A função agora é chamada apenas após validarGestor no botão.
       function excluirFuncionario(id) {
-        if (confirm("Excluir registro?")) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const nome = f ? f.nome : "registro";
+        if (
+          confirm(
+            `Tem certeza que deseja excluir permanentemente o registro de: ${nome}?`
+          )
+        ) {
           db.ref("funcionarios/" + id)
             .remove()
-            .then(() => registrarLog("Adm removeu registro"));
+            .then(() => {
+              registrarLog(`Adm removeu registro: ${nome}`);
+              showToast("🗑️ Registro excluído!");
+            });
         }
       }
 
       function validarGestor(cb) {
         const s = localStorage.getItem(PASS_KEY) || "1234";
-        const t = prompt("Senha:");
+        const t = prompt("Senha de Administrador:");
         if (t === s) cb();
-        else if (t !== null) alert("Erro!");
+        else if (t !== null) alert("Senha incorreta!");
       }
 
       function salvarNovaSenha() {
         const n = document.getElementById("inputNovaSenha").value;
         if (n) {
           localStorage.setItem(PASS_KEY, n);
-          alert("Salvo!");
+          alert("Senha alterada com sucesso!");
           document.getElementById("modalSenha").style.display = "none";
         }
       }
@@ -1014,9 +1020,9 @@
         reader.onload = (e) => {
           try {
             const json = JSON.parse(e.target.result);
-            if (confirm("Importar?")) db.ref("/").update(json);
+            if (confirm("Importar dados do arquivo?")) db.ref("/").update(json);
           } catch (err) {
-            alert("Erro!");
+            alert("Erro ao importar JSON!");
           }
         };
         reader.readAsText(file);
