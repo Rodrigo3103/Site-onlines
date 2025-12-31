@@ -6,15 +6,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v4.9 - PERSONALIZADO</title>
+    <title>PONTO PRO v6.0</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-      /* Estilos originais mantidos conforme index.html fornecido */
       :root {
         --primary: #0984e3;
         --bg-body: #f0f2f5;
@@ -26,10 +23,8 @@
         --danger: #d63031;
         --border: #dfe6e9;
         --nav-bg: #ffffff;
-        --local-bg: #e8f8f5;
-        --alert-color: #e67e22;
-        --visitor-blue: #3498db;
         --whatsapp: #25d366;
+        --dodgeblue: #1e90ff;
       }
       body.dark-mode {
         --bg-body: #18191a;
@@ -42,15 +37,16 @@
       * {
         box-sizing: border-box;
         -webkit-tap-highlight-color: transparent;
-        font-family: "Segoe UI", Roboto, sans-serif;
+        font-family: "Segoe UI", sans-serif;
       }
       body {
         background-color: var(--bg-body);
         color: var(--text-main);
         margin: 0;
         padding-bottom: 100px;
-        transition: background 0.3s;
+        transition: 0.3s;
       }
+
       .app-header {
         position: sticky;
         top: 0;
@@ -67,6 +63,7 @@
         max-width: 800px;
         margin: 0 auto;
       }
+
       .dash-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -86,6 +83,7 @@
         font-size: 18px;
         font-weight: bold;
       }
+
       .search-input {
         width: 100%;
         padding: 12px;
@@ -93,49 +91,30 @@
         border: 1px solid var(--border);
         background: var(--bg-card);
         color: var(--text-main);
-        margin-bottom: 15px;
+        margin-bottom: 10px;
+        outline: none;
       }
+
       .emp-card {
         background: var(--bg-card);
         border-radius: 15px;
         padding: 15px;
         margin-bottom: 12px;
         border: 1px solid var(--border);
-        position: relative;
         transition: 0.3s;
         cursor: pointer;
       }
-      .emp-card.has-alert {
-        border: 2px solid var(--alert-color);
-        animation: pulseAlert 2s infinite;
-      }
-      @keyframes pulseAlert {
-        0% {
-          border-color: var(--alert-color);
-        }
-        50% {
-          border-color: transparent;
-        }
-        100% {
-          border-color: var(--alert-color);
-        }
-      }
-      .badge-vinculo {
-        font-size: 9px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        color: white;
-        font-weight: bold;
-        text-transform: uppercase;
-        margin-bottom: 5px;
-        display: inline-block;
+      .emp-card.open {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
       .status-pill {
         font-size: 10px;
         padding: 4px 8px;
         border-radius: 6px;
-        font-weight: 900;
+        font-weight: bold;
         color: white;
+        float: right;
       }
       .time-tag {
         background: var(--bg-body);
@@ -144,67 +123,44 @@
         font-size: 11px;
         font-weight: bold;
         border: 1px solid var(--border);
+        margin-right: 4px;
       }
-      .btn-whatsapp {
-        background: var(--whatsapp);
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-        text-decoration: none;
-      }
-      .btn-group-alert {
-        background: #d63031;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-      }
+
       .smart-details {
         max-height: 0;
         overflow: hidden;
         transition: 0.3s ease-out;
         opacity: 0;
-        background: var(--bg-body);
-        border-radius: 8px;
       }
       .emp-card.open .smart-details {
-        max-height: 800px;
+        max-height: 1000px;
         opacity: 1;
-        margin-top: 10px;
-        padding: 10px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border);
       }
+
       .btn {
-        flex: 1;
-        padding: 10px;
-        border-radius: 8px;
+        padding: 12px;
+        border-radius: 10px;
         border: none;
         font-weight: bold;
-        font-size: 12px;
         cursor: pointer;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
+        gap: 8px;
+        margin-top: 10px;
+        color: white;
+        font-size: 13px;
       }
-      .tab-pane {
-        display: none;
+      .btn-sm {
+        padding: 8px;
+        font-size: 11px;
+        margin-top: 5px;
       }
-      .tab-pane.active {
-        display: block;
-      }
+
       .bottom-nav {
         position: fixed;
         bottom: 0;
@@ -224,7 +180,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        font-size: 10px;
+        font-size: 9px;
       }
       .nav-btn.active {
         color: var(--primary);
@@ -238,11 +194,10 @@
         margin-top: -30px;
         border: none;
         font-size: 24px;
-        box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3);
+        box-shadow: 0 4px 12px rgba(9, 132, 227, 0.4);
       }
-      #modalCadastro,
-      #pontoEditModal,
-      #modalSenha {
+
+      .modal {
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.8);
@@ -258,33 +213,24 @@
         max-width: 400px;
         padding: 25px;
         border-radius: 20px;
-        overflow-y: auto;
         max-height: 90vh;
+        overflow-y: auto;
       }
-      .local-card {
-        background: var(--local-bg);
-        border: 2px solid var(--success);
-        padding: 12px;
-        border-radius: 12px;
-        text-align: center;
+
+      .tab-pane {
+        display: none;
       }
-      .local-timer {
-        font-family: monospace;
-        background: var(--success);
-        color: white;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 11px;
-        margin-top: 8px;
-        display: inline-block;
+      .tab-pane.active {
+        display: block;
       }
-      .log-item {
-        background: var(--bg-body);
-        padding: 8px;
-        border-radius: 8px;
-        margin-bottom: 5px;
-        font-size: 10px;
-        border-left: 3px solid var(--primary);
+
+      .txt-entrada {
+        color: #00b894;
+        font-weight: bold;
+      }
+      .txt-saida {
+        color: #d63031;
+        font-weight: bold;
       }
     </style>
   </head>
@@ -292,12 +238,12 @@
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v4.9</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v6.0</small>
         </h1>
         <input
           type="date"
           id="inputDataFiltro"
-          onchange="atualizarDataFiltro()"
+          onchange="mudarData()"
           style="
             border: none;
             background: none;
@@ -308,7 +254,7 @@
         />
       </div>
       <button
-        onclick="toggleDarkMode()"
+        onclick="document.body.classList.toggle('dark-mode')"
         style="background: none; border: none; font-size: 20px"
       >
         🌓
@@ -320,30 +266,30 @@
         <div class="dash-grid">
           <div class="dash-card"><span id="dashTotal">0</span>Total</div>
           <div class="dash-card" style="border-color: var(--success)">
-            <span id="dashPresentes">0</span>OK
+            <span id="dashOk">0</span>OK
           </div>
           <div class="dash-card" style="border-color: var(--warning)">
-            <span id="dashPendentes">0</span>Abertos
+            <span id="dashPen">0</span>Pátio
           </div>
-          <div class="dash-card"><span id="dashVazios">0</span>Faltas</div>
+          <div class="dash-card"><span id="dashVazio">0</span>Faltas</div>
         </div>
         <input
           type="text"
           id="searchInput"
           class="search-input"
-          placeholder="🔍 Buscar nome, placa ou tipo..."
-          oninput="renderizarCards()"
+          placeholder="🔍 Buscar colaborador ou placa..."
+          oninput="renderizar()"
         />
         <div id="cardsContainer"></div>
       </main>
 
       <section id="tab-local" class="tab-pane">
-        <h3 style="display: flex; align-items: center; gap: 10px">
-          📍 Local / Pátio
+        <h3>
+          📍 No Pátio agora
           <span
             id="countLocal"
             style="
-              background: var(--success);
+              background: var(--primary);
               color: white;
               padding: 2px 8px;
               border-radius: 10px;
@@ -352,81 +298,74 @@
             >0</span
           >
         </h3>
+        <div id="painelLocal"></div>
+      </section>
+
+      <section id="tab-dia" class="tab-pane">
+        <h3>📖 Registro do Dia</h3>
         <div
-          id="presencePanel"
           style="
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
+            width: 100%;
+            overflow-x: auto;
+            background: var(--bg-card);
+            border-radius: 15px;
+            border: 1px solid var(--border);
           "
-        ></div>
+        >
+          <table
+            style="
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 12px;
+              min-width: 500px;
+            "
+          >
+            <thead>
+              <tr style="background: var(--bg-body); text-align: left">
+                <th style="padding: 12px">Nome</th>
+                <th style="padding: 12px">Placa</th>
+                <th style="padding: 12px">Entrada</th>
+                <th style="padding: 12px">Saída</th>
+              </tr>
+            </thead>
+            <tbody id="listaRegistroDia"></tbody>
+          </table>
+        </div>
       </section>
 
       <section id="tab-tools" class="tab-pane">
-        <h3>⚙️ Ferramentas</h3>
-        <div style="display: grid; gap: 10px">
-          <button
-            class="btn"
-            style="background: #6c5ce7; color: white"
-            onclick="validarGestor(abrirGerenciadorSenha)"
-          >
-            🔑 Senha Admin
-          </button>
-          <button
-            class="btn"
-            style="background: #2d3436; color: white"
-            onclick="abrirAuditoria()"
-          >
-            📜 Ver Auditoria
-          </button>
-          <button
-            class="btn"
-            style="background: #e67e22; color: white"
-            onclick="validarGestor(() => document.getElementById('inputImportar').click())"
-          >
-            📥 Importar JSON
-          </button>
-          <input
-            type="file"
-            id="inputImportar"
-            style="display: none"
-            accept=".json"
-            onchange="importarJSON(event)"
-          />
-          <button
-            class="btn"
-            style="background: #00b894; color: white"
-            onclick="exportarExcel()"
-          >
-            📊 Exportar Excel
-          </button>
-          <button
-            class="btn"
-            style="background: #d63031; color: white"
-            onclick="exportarPDFGeral()"
-          >
-            📕 PDF Geral
-          </button>
-          <button
-            class="btn"
-            style="background: #6c757d; color: white"
-            onclick="validarGestor(fazerBackup)"
-          >
-            💾 Backup
-          </button>
-        </div>
-        <div
-          id="auditoriaBox"
-          style="
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--bg-card);
-            border-radius: 15px;
-          "
+        <h3>⚙️ Administrativo</h3>
+        <button
+          class="btn"
+          style="background: #6c5ce7"
+          onclick="validarGestor(alterarSenhaAdmin)"
         >
-          <div id="logList"></div>
-        </div>
+          🔑 Alterar Senha Admin
+        </button>
+        <button class="btn" style="background: #25d366" onclick="exportarCSV()">
+          📊 Exportar Excel
+        </button>
+        <button
+          class="btn"
+          style="background: #0984e3"
+          onclick="validarGestor(exportarJSON)"
+        >
+          📤 Backup JSON
+        </button>
+        <button
+          class="btn"
+          style="background: #e67e22"
+          onclick="validarGestor(() => document.getElementById('inputImportar').click())"
+        >
+          📥 Importar JSON
+        </button>
+        <input
+          type="file"
+          id="inputImportar"
+          style="display: none"
+          accept=".json"
+          onchange="importarJSON(event)"
+        />
       </section>
     </div>
 
@@ -434,24 +373,22 @@
       <button class="nav-btn active" onclick="switchTab('tab-registros', this)">
         📋 Ponto
       </button>
-      <button class="nav-btn-main" onclick="abrirModalCadastro()">＋</button>
       <button class="nav-btn" onclick="switchTab('tab-local', this)">
         📍 Local
+      </button>
+      <button class="nav-btn-main" onclick="abrirModalCadastro()">＋</button>
+      <button class="nav-btn" onclick="switchTab('tab-dia', this)">
+        📖 Registro
       </button>
       <button class="nav-btn" onclick="switchTab('tab-tools', this)">
         ⚙️ Mais
       </button>
     </nav>
 
-    <div id="modalCadastro">
+    <div id="modalCadastro" class="modal">
       <div class="modal-box">
-        <h3 id="tituloCrud">Cadastro</h3>
-        <input type="hidden" id="editFuncId" />
-        <select id="formVinculo" class="search-input">
-          <option value="COLABORADOR">COLABORADOR (PROFESSOR)</option>
-          <option value="VISITANTE">VISITANTE</option>
-          <option value="TERCEIRIZADO">TERCEIRIZADO</option>
-        </select>
+        <h3 id="modalTitle">Cadastro de Usuário</h3>
+        <input type="hidden" id="formId" />
         <input
           type="text"
           id="formNome"
@@ -460,10 +397,19 @@
         />
         <input
           type="text"
+          id="formPlaca"
+          class="search-input"
+          placeholder="Placa (Ex: ABC1234)"
+          oninput="mascaraPlaca(this)"
+          maxlength="8"
+        />
+        <input
+          type="text"
           id="formTelefone"
           class="search-input"
-          placeholder="WhatsApp (DDD) 9..."
-          oninput="aplicarMascaraTelefone(this)"
+          placeholder="WhatsApp (00) 00000-0000"
+          oninput="mascaraTel(this)"
+          maxlength="15"
         />
         <input
           type="text"
@@ -473,81 +419,28 @@
         />
         <input
           type="text"
-          id="formPlaca"
+          id="formVeiculo"
           class="search-input"
-          placeholder="Placa"
-          oninput="aplicarMascaraPlaca(this)"
-          maxlength="8"
+          placeholder="Modelo do Veículo"
         />
-
-        <label
-          style="font-size: 10px; font-weight: bold; color: var(--alert-color)"
-          >⚠️ MENSAGEM DE ALERTA (DEIXE VAZIO SE NÃO HOUVER)</label
-        >
         <input
           type="text"
-          id="formAlerta"
+          id="formOcorrencia"
           class="search-input"
-          placeholder="Ex: Farol aceso, Vidro aberto..."
-        />
-
-        <div style="display: flex; gap: 10px">
-          <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
-          <button
-            class="btn"
-            style="background: var(--primary); color: white"
-            onclick="processarFuncionario()"
-          >
-            Salvar
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="modalSenha">
-      <div class="modal-box">
-        <h3>Alterar Senha</h3>
-        <input
-          type="password"
-          id="inputNovaSenha"
-          class="search-input"
-          placeholder="Nova Senha"
+          placeholder="Ocorrência (Ex: Som alto, vaga errada)"
         />
         <div style="display: flex; gap: 10px">
           <button
             class="btn"
-            onclick="document.getElementById('modalSenha').style.display='none'"
+            style="background: #95a5a6"
+            onclick="fecharModais()"
           >
-            Sair</button
-          ><button
-            class="btn"
-            style="background: var(--success); color: white"
-            onclick="salvarNovaSenha()"
-          >
-            Salvar
+            Sair
           </button>
-        </div>
-      </div>
-    </div>
-    <div id="pontoEditModal">
-      <div class="modal-box">
-        <h3 id="modalFuncionarioNome">Ajustar Ponto</h3>
-        <input
-          type="text"
-          id="modalMarcacoes"
-          class="search-input"
-          oninput="aplicarMascaraPonto(this)"
-        /><input type="hidden" id="modalFuncionarioId" />
-        <div style="display: flex; gap: 10px">
           <button
             class="btn"
-            onclick="document.getElementById('pontoEditModal').style.display='none'"
-          >
-            Sair</button
-          ><button
-            class="btn"
-            style="background: var(--success); color: white"
-            onclick="savePontoEditModal()"
+            style="background: var(--primary)"
+            onclick="salvarFuncionario()"
           >
             Confirmar
           </button>
@@ -556,152 +449,50 @@
     </div>
 
     <script>
-      // CONFIGURAÇÃO FIREBASE (MANTIDA)
       const firebaseConfig = {
         apiKey: "AIzaSyBfcH5K-9sz7WQIZrt7Cb4U39r7vuU6E7Q",
         authDomain: "espelhodepontoetecvilaformosa.firebaseapp.com",
         databaseURL:
           "https://espelhodepontoetecvilaformosa-default-rtdb.firebaseio.com",
         projectId: "espelhodepontoetecvilaformosa",
-        storageBucket: "espelhodepontoetecvilaformosa.firebasestorage.app",
-        messagingSenderId: "1076635740136",
-        appId: "1:1076635740136:web:567dbfeb482017d532721d",
       };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
 
-      let dadosFuncionarios = [];
-      let logsAuditoria = [];
-      let dataSelecionadaISO = new Date().toISOString().slice(0, 10);
-      const PASS_KEY = "ponto_admin_pass";
+      let funcionarios = [];
+      let dataISO = new Date().toISOString().slice(0, 10);
 
-      // SINCRONIZAÇÃO EM TEMPO REAL
+      document.getElementById("inputDataFiltro").value = dataISO;
+
+      // Sincronização
       db.ref("funcionarios").on("value", (s) => {
-        const raw = s.val();
-        dadosFuncionarios = raw
-          ? Object.keys(raw).map((k) => ({ ...raw[k], id: k }))
-          : [];
-        renderizarCards();
-        renderizarPainelPresenca();
+        funcionarios = s.val() ? Object.values(s.val()) : [];
+        renderizar();
+        renderizarLocal();
+        renderizarRegistroDia();
       });
 
-      function renderizarCards() {
-        const container = document.getElementById("cardsContainer");
-        const busca = document
-          .getElementById("searchInput")
-          .value.toUpperCase();
-        container.innerHTML = "";
-
-        dadosFuncionarios
-          .filter((f) =>
-            (f.nome + (f.placa || "")).toUpperCase().includes(busca)
-          )
-          .forEach((f) => {
-            const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-            const status =
-              m.length === 0
-                ? "VAZIO"
-                : m.length % 2 !== 0
-                ? "PENDENTE"
-                : "FECHADO";
-
-            container.innerHTML += `
-            <div class="emp-card ${
-              f.alertaAtivo ? "has-alert" : ""
-            }" onclick="this.classList.toggle('open')">
-              <span class="badge-vinculo" style="background:#636e72">${
-                f.vinculo || "PROFESSOR"
-              }</span>
-              <div style="display:flex; justify-content:space-between">
-                <div><b>${f.nome}</b><br><small>${f.funcao}</small></div>
-                <span class="status-pill" style="background:${
-                  status === "FECHADO"
-                    ? "var(--success)"
-                    : status === "PENDENTE"
-                    ? "var(--warning)"
-                    : "var(--text-sub)"
-                }">${status}</span>
-              </div>
-              <div style="margin:10px 0">${
-                m.map((h) => `<span class="time-tag">${h}</span>`).join("") ||
-                "---"
-              }</div>
-              <div style="display:flex; gap:8px">
-                ${
-                  f.telefone
-                    ? `<button class="btn-whatsapp" onclick="event.stopPropagation(); enviarZapIndividual('${f.id}')">📱 Zap</button>`
-                    : ""
-                }
-                ${
-                  f.alertaAtivo
-                    ? `<button class="btn-group-alert" onclick="event.stopPropagation(); notificarGrupo('${f.id}')">🚨 Grupo</button>`
-                    : ""
-                }
-              </div>
-              <div class="smart-details">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
-                  <button class="btn" style="background:#3498db; color:white" onclick="event.stopPropagation(); exportarPDFIndividual('${
-                    f.id
-                  }')">📄 PDF</button>
-                  <button class="btn" style="background:#007bff; color:white" onclick="event.stopPropagation(); abrirEdicaoPonto('${
-                    f.id
-                  }')">✏️ Ponto</button>
-                  <button class="btn" style="background:var(--text-sub); color:white" onclick="event.stopPropagation(); iniciarEdicaoCadastro('${
-                    f.id
-                  }')">⚙️ Dados</button>
-                  <button class="btn" style="background:var(--danger); color:white" onclick="event.stopPropagation(); excluirFuncionario('${
-                    f.id
-                  }')">🗑️ Excluir</button>
-                </div>
-              </div>
-              <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px; padding:12px" onclick="event.stopPropagation(); baterPonto('${
-                f.id
-              }')">REGISTRAR AGORA</button>
-            </div>`;
-          });
-        atualizarDashboard();
+      // MÁSCARAS
+      function mascaraPlaca(i) {
+        let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
+        i.value = v;
       }
 
-      function processarFuncionario() {
-        const id =
-          document.getElementById("editFuncId").value || Date.now().toString();
-        const fExistente = dadosFuncionarios.find((x) => x.id === id);
-        const d = {
-          nome: document.getElementById("formNome").value.toUpperCase(),
-          telefone: document.getElementById("formTelefone").value,
-          vinculo: document.getElementById("formVinculo").value,
-          funcao: document.getElementById("formFuncao").value.toUpperCase(),
-          placa: document.getElementById("formPlaca").value.toUpperCase(),
-          alertaAtivo: document
-            .getElementById("formAlerta")
-            .value.toUpperCase(), // Salva a mensagem personalizada
-          historico: fExistente ? fExistente.historico || {} : {},
-        };
-        db.ref("funcionarios/" + id)
-          .set(d)
-          .then(() => {
-            registrarLog(`Salvo: ${d.nome}`);
-            fecharModalCadastro();
-          });
+      function mascaraTel(i) {
+        let v = i.value.replace(/\D/g, "");
+        v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+        v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+        i.value = v;
       }
 
-      function notificarGrupo(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*NOME:* ${
-          f.nome
-        }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
-          f.alertaAtivo
-        }\n\n_PONTO PRO v4.9_`;
-        window.location.href = `whatsapp://send?text=${encodeURIComponent(
-          texto
-        )}`;
-      }
-
-      function enviarZapIndividual(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const msg = f.alertaAtivo
-          ? `Olá ${f.nome}, seu veículo (${f.placa}) está com: *${f.alertaAtivo}*.`
-          : `Olá ${f.nome}`;
+      // WHATSAPP
+      function zapPrivado(id) {
+        const f = funcionarios.find((x) => x.id === id);
+        if (!f.telefone) return alert("Telefone não cadastrado!");
+        const msg = `Olá ${f.nome}, registro de ponto referente ao veículo ${
+          f.placa || ""
+        }: ${f.ocorrencia || "Tudo ok!"}`;
         window.open(
           `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
             /\D/g,
@@ -711,187 +502,274 @@
         );
       }
 
-      // --- TODAS AS OUTRAS FUNÇÕES MANTIDAS DO INDEX.HTML ---
+      function zapGrupo(id) {
+        const f = funcionarios.find((x) => x.id === id);
+        const msg = `⚠️ *ALERTA DE OCORRÊNCIA*\n\n👤 *NOME:* ${
+          f.nome
+        }\n🚗 *PLACA:* ${f.placa || "N/A"}\n📝 *MOTIVO:* ${
+          f.ocorrencia || "Não informada"
+        }`;
+        window.open(
+          `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`,
+          "_blank"
+        );
+      }
+
+      // RENDERIZAÇÃO PRINCIPAL (ABA PONTO)
+      function renderizar() {
+        const container = document.getElementById("cardsContainer");
+        const busca = document
+          .getElementById("searchInput")
+          .value.toUpperCase();
+        container.innerHTML = "";
+        let ok = 0,
+          pen = 0,
+          vaz = 0;
+
+        funcionarios
+          .filter((f) =>
+            (f.nome + (f.placa || "")).toUpperCase().includes(busca)
+          )
+          .forEach((f) => {
+            const h = f.historico?.[dataISO]?.marcacoes || [];
+            const status =
+              h.length === 0
+                ? "VAZIO"
+                : h.length % 2 !== 0
+                ? "PENDENTE"
+                : "FECHADO";
+            if (status === "FECHADO") ok++;
+            else if (status === "PENDENTE") pen++;
+            else vaz++;
+
+            const card = document.createElement("div");
+            card.className = "emp-card";
+            card.onclick = (e) => {
+              if (!e.target.closest("button")) card.classList.toggle("open");
+            };
+            card.innerHTML = `
+                <span class="status-pill" style="background:${
+                  status === "FECHADO"
+                    ? "var(--success)"
+                    : status === "PENDENTE"
+                    ? "var(--warning)"
+                    : "var(--text-sub)"
+                }">${status}</span>
+                <b>${f.nome}</b><br>
+                <small>${f.funcao || "SETOR NÃO INFO"} | ${
+              f.placa || "SEM PLACA"
+            }</small>
+                
+                ${
+                  f.ocorrencia
+                    ? `<div style="color:var(--danger); font-size:11px; margin-top:5px; font-weight:bold">⚠️ ${f.ocorrencia}</div>`
+                    : ""
+                }
+
+                <div style="margin-top:10px">${
+                  h.map((t) => `<span class="time-tag">${t}</span>`).join("") ||
+                  "---"
+                }</div>
+                
+                <div class="smart-details">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
+                        <button class="btn btn-sm" style="background:var(--whatsapp)" onclick="zapPrivado('${
+                          f.id
+                        }')">📱 Privado</button>
+                        <button class="btn btn-sm" style="background:var(--danger)" onclick="zapGrupo('${
+                          f.id
+                        }')">📢 Grupo</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
+                        <button class="btn btn-sm" style="background:var(--text-sub)" onclick="abrirEdicao('${
+                          f.id
+                        }')">⚙️ Dados</button>
+                        <button class="btn btn-sm" style="background:#000" onclick="excluirFuncionario('${
+                          f.id
+                        }','${f.nome}')">🗑️ Excluir</button>
+                    </div>
+                </div>
+                
+                <button class="btn" style="background:var(--primary); margin-top:12px" onclick="baterPonto('${
+                  f.id
+                }')">REGISTRAR PONTO</button>
+            `;
+            container.appendChild(card);
+          });
+
+        document.getElementById("dashTotal").innerText = funcionarios.length;
+        document.getElementById("dashOk").innerText = ok;
+        document.getElementById("dashPen").innerText = pen;
+        document.getElementById("dashVazio").innerText = vaz;
+      }
+
+      function renderizarRegistroDia() {
+        const lista = document.getElementById("listaRegistroDia");
+        lista.innerHTML = "";
+        funcionarios
+          .filter((f) => f.historico?.[dataISO]?.marcacoes?.length > 0)
+          .sort((a, b) =>
+            a.historico[dataISO].marcacoes[0].localeCompare(
+              b.historico[dataISO].marcacoes[0]
+            )
+          )
+          .forEach((f) => {
+            const h = f.historico[dataISO].marcacoes;
+            lista.innerHTML += `
+                <tr style="border-top: 1px solid var(--border)">
+                    <td style="padding:12px">${f.nome}</td>
+                    <td style="padding:12px">${f.placa || ""}</td>
+                    <td class="txt-entrada" style="padding:12px">${h[0]}</td>
+                    <td class="${
+                      h.length % 2 === 0 ? "txt-saida" : ""
+                    }" style="padding:12px">${
+              h.length % 2 === 0 ? h[h.length - 1] : "Local"
+            }</td>
+                </tr>`;
+          });
+      }
+
+      function renderizarLocal() {
+        const painel = document.getElementById("painelLocal");
+        painel.innerHTML = "";
+        let count = 0;
+        funcionarios.forEach((f) => {
+          const h = f.historico?.[dataISO]?.marcacoes || [];
+          if (h.length > 0 && h.length % 2 !== 0) {
+            count++;
+            const entrada = h[h.length - 1];
+            painel.innerHTML += `<div style="background:var(--dodgeblue); color:white; padding:15px; border-radius:12px; margin-bottom:10px">
+                <b>${f.nome}</b><br><small>Placa: ${
+              f.placa || "---"
+            }</small><br>
+                <div style="font-family:monospace; margin-top:5px; font-weight:bold" class="local-timer" data-inicio="${entrada}">00:00:00</div>
+            </div>`;
+          }
+        });
+        document.getElementById("countLocal").innerText = count;
+      }
+
+      // AÇÕES
       function baterPonto(id) {
         const agora = new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
         });
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
+        db.ref(`funcionarios/${id}/historico/${dataISO}/marcacoes`)
           .get()
           .then((s) => {
             let m = s.val() || [];
             m.push(agora);
-            db.ref(
-              `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
-            ).set(m);
+            db.ref(`funcionarios/${id}/historico/${dataISO}/marcacoes`).set(m);
           });
       }
-      function abrirEdicaoPonto(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("modalFuncionarioId").value = id;
-        document.getElementById("modalFuncionarioNome").innerText = f.nome;
-        document.getElementById("modalMarcacoes").value = (
-          f.historico?.[dataSelecionadaISO]?.marcacoes || []
-        ).join(", ");
-        document.getElementById("pontoEditModal").style.display = "flex";
+
+      function salvarFuncionario() {
+        const id =
+          document.getElementById("formId").value || Date.now().toString();
+        const fOld = funcionarios.find((x) => x.id === id);
+        const d = {
+          id,
+          nome: document.getElementById("formNome").value.toUpperCase(),
+          placa: document.getElementById("formPlaca").value.toUpperCase(),
+          telefone: document.getElementById("formTelefone").value,
+          funcao: document.getElementById("formFuncao").value.toUpperCase(),
+          veiculo: document.getElementById("formVeiculo").value.toUpperCase(),
+          ocorrencia: document
+            .getElementById("formOcorrencia")
+            .value.toUpperCase(),
+          historico: fOld ? fOld.historico || {} : {},
+        };
+        db.ref("funcionarios/" + id)
+          .set(d)
+          .then(() => fecharModais());
       }
-      function savePontoEditModal() {
-        const id = document.getElementById("modalFuncionarioId").value;
-        const m = document
-          .getElementById("modalMarcacoes")
-          .value.split(",")
-          .map((t) => t.trim())
-          .filter((t) => t);
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`)
-          .set(m)
-          .then(
-            () =>
-              (document.getElementById("pontoEditModal").style.display = "none")
-          );
+
+      function excluirFuncionario(id, nome) {
+        validarGestor(() => {
+          if (confirm(`Deseja realmente apagar o cadastro de ${nome}?`))
+            db.ref("funcionarios/" + id).remove();
+        });
       }
-      function iniciarEdicaoCadastro(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("editFuncId").value = f.id;
-        document.getElementById("formNome").value = f.nome;
-        document.getElementById("formTelefone").value = f.telefone || "";
-        document.getElementById("formPlaca").value = f.placa || "";
-        document.getElementById("formFuncao").value = f.funcao || "";
-        document.getElementById("formAlerta").value = f.alertaAtivo || "";
-        document.getElementById("modalCadastro").style.display = "flex";
-      }
-      function excluirFuncionario(id) {
-        if (confirm("Excluir?")) db.ref("funcionarios/" + id).remove();
-      }
+
+      // INTERFACE
       function switchTab(id, btn) {
         document
-          .querySelectorAll(".tab-pane")
-          .forEach((p) => p.classList.remove("active"));
-        document
-          .querySelectorAll(".nav-btn")
-          .forEach((b) => b.classList.remove("active"));
+          .querySelectorAll(".tab-pane, .nav-btn")
+          .forEach((el) => el.classList.remove("active"));
         document.getElementById(id).classList.add("active");
         btn.classList.add("active");
       }
-      function toggleDarkMode() {
-        document.body.classList.toggle("dark-mode");
-      }
-      function fecharModalCadastro() {
-        document.getElementById("modalCadastro").style.display = "none";
-      }
+
       function abrirModalCadastro() {
-        document.getElementById("editFuncId").value = "";
+        document.getElementById("modalTitle").innerText = "Novo Cadastro";
+        document.getElementById("formId").value = "";
+        document
+          .querySelectorAll("#modalCadastro input")
+          .forEach((i) => (i.value = ""));
         document.getElementById("modalCadastro").style.display = "flex";
       }
-      function aplicarMascaraTelefone(i) {
-        let v = i.value.replace(/\D/g, "");
-        if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
-        if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
-        i.value = v;
+
+      function abrirEdicao(id) {
+        const f = funcionarios.find((x) => x.id === id);
+        document.getElementById("modalTitle").innerText = "Editar Cadastro";
+        document.getElementById("formId").value = f.id;
+        document.getElementById("formNome").value = f.nome;
+        document.getElementById("formPlaca").value = f.placa || "";
+        document.getElementById("formTelefone").value = f.telefone || "";
+        document.getElementById("formFuncao").value = f.funcao || "";
+        document.getElementById("formVeiculo").value = f.veiculo || "";
+        document.getElementById("formOcorrencia").value = f.ocorrencia || "";
+        document.getElementById("modalCadastro").style.display = "flex";
       }
-      function aplicarMascaraPlaca(i) {
-        let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-        if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
-        i.value = v;
+
+      function fecharModais() {
+        document
+          .querySelectorAll(".modal")
+          .forEach((m) => (m.style.display = "none"));
       }
-      function aplicarMascaraPonto(i) {
-        let v = i.value.replace(/\D/g, "");
-        let f = "";
-        for (let j = 0; j < v.length; j++) {
-          if (j > 0 && j % 4 === 0) f += ", ";
-          else if (j > 0 && j % 2 === 0) f += ":";
-          f += v[j];
-        }
-        i.value = f;
+      function mudarData() {
+        dataISO = document.getElementById("inputDataFiltro").value;
+        renderizar();
+        renderizarLocal();
+        renderizarRegistroDia();
       }
-      function registrarLog(msg) {
-        db.ref("auditoria").push({
-          data: new Date().toLocaleString(),
-          acao: msg,
+
+      function validarGestor(cb) {
+        db.ref("config/admin_pass").once("value", (s) => {
+          const pass = s.val() || "1234";
+          const t = prompt("Senha Administrativa:");
+          if (t === pass) cb();
+          else if (t !== null) alert("Senha Incorreta!");
         });
       }
-      function atualizarDashboard() {
-        let ok = 0,
-          pen = 0,
-          vaz = 0;
-        dadosFuncionarios.forEach((f) => {
-          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          if (m.length === 0) vaz++;
-          else if (m.length % 2 !== 0) pen++;
-          else ok++;
-        });
-        document.getElementById("dashTotal").innerText =
-          dadosFuncionarios.length;
-        document.getElementById("dashPresentes").innerText = ok;
-        document.getElementById("dashPendentes").innerText = pen;
-        document.getElementById("dashVazios").innerText = vaz;
+
+      function alterarSenhaAdmin() {
+        const n = prompt("Defina a nova senha admin:");
+        if (n)
+          db.ref("config/admin_pass")
+            .set(n)
+            .then(() => alert("Senha atualizada!"));
       }
-      function renderizarPainelPresenca() {
-        const p = document.getElementById("presencePanel");
-        let count = 0;
-        p.innerHTML = "";
-        dadosFuncionarios.forEach((f) => {
-          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          if (m.length % 2 !== 0) {
-            count++;
-            p.innerHTML += `<div class="local-card"><b>${
-              f.nome
-            }</b><br><span class="local-timer" data-inicio="${
-              m[m.length - 1]
-            }">...</span></div>`;
-          }
-        });
-        document.getElementById("countLocal").innerText = count;
-      }
+
+      // CRONÔMETRO
       setInterval(() => {
         document.querySelectorAll(".local-timer").forEach((t) => {
           const [h, m, s] = t.dataset.inicio.split(":").map(Number);
-          const inicio = new Date();
-          inicio.setHours(h, m, s);
-          let diff = Math.floor((new Date() - inicio) / 1000);
+          const ini = new Date();
+          ini.setHours(h, m, s || 0);
+          let diff = Math.floor((new Date() - ini) / 1000);
           if (diff < 0) diff = 0;
-          const fmt = (v) => String(Math.floor(v)).padStart(2, "0");
-          t.innerText = `${fmt(diff / 3600)}:${fmt((diff % 3600) / 60)}:${fmt(
-            diff % 60
-          )}`;
+          t.innerText = `${String(Math.floor(diff / 3600)).padStart(
+            2,
+            "0"
+          )}:${String(Math.floor((diff % 3600) / 60)).padStart(
+            2,
+            "0"
+          )}:${String(diff % 60).padStart(2, "0")}`;
         });
       }, 1000);
-      function atualizarDataFiltro() {
-        dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
-        renderizarCards();
-      }
-      document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
-
-      // Funções de exportação e backup mantidas conforme original...
-      function exportarExcel() {
-        let csv = "\ufeffNome;Placa;Batidas\n";
-        dadosFuncionarios.forEach(
-          (f) =>
-            (csv += `${f.nome};${f.placa || ""};${(
-              f.historico?.[dataSelecionadaISO]?.marcacoes || []
-            ).join(" | ")}\n`)
-        );
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-        a.download = `ponto.csv`;
-        a.click();
-      }
-      function fazerBackup() {
-        const b = new Blob([JSON.stringify(dadosFuncionarios)], {
-          type: "application/json",
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(b);
-        a.download = `backup_ponto.json`;
-        a.click();
-      }
-      function validarGestor(cb) {
-        const s = localStorage.getItem(PASS_KEY) || "1234";
-        const t = prompt("Senha:");
-        if (t === s) cb();
-        else alert("Senha Incorreta!");
-      }
     </script>
   </body>
 </html>
