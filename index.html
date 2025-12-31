@@ -27,6 +27,7 @@
         --nav-bg: #ffffff;
         --local-bg: #e8f8f5;
         --alert-color: #e67e22;
+        --visitor-blue: #3498db;
         --whatsapp: #25d366;
       }
       body.dark-mode {
@@ -50,6 +51,7 @@
         transition: background 0.3s;
       }
 
+      /* Notificação Toast */
       #toast {
         visibility: hidden;
         min-width: 280px;
@@ -121,6 +123,14 @@
         font-size: 10px;
         border-bottom: 3px solid var(--border);
         cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .dash-card:active {
+        transform: scale(0.95);
+      }
+      .dash-card.active-filter {
+        background: var(--border);
+        border-bottom-width: 5px;
       }
       .dash-card span {
         display: block;
@@ -145,7 +155,6 @@
         border: 1px solid var(--border);
         position: relative;
         transition: 0.3s;
-        cursor: pointer;
       }
       .emp-card.has-alert {
         border: 2px solid var(--alert-color);
@@ -201,6 +210,9 @@
         align-items: center;
         gap: 5px;
         cursor: pointer;
+        text-decoration: none;
+        position: relative;
+        z-index: 20;
       }
       .btn-group-alert {
         background: #d63031;
@@ -214,6 +226,8 @@
         align-items: center;
         gap: 5px;
         cursor: pointer;
+        position: relative;
+        z-index: 20;
       }
 
       .smart-details {
@@ -243,6 +257,8 @@
         align-items: center;
         justify-content: center;
         gap: 5px;
+        position: relative;
+        z-index: 10;
       }
       .tab-pane {
         display: none;
@@ -271,7 +287,6 @@
         flex-direction: column;
         align-items: center;
         font-size: 10px;
-        cursor: pointer;
       }
       .nav-btn.active {
         color: var(--primary);
@@ -286,7 +301,6 @@
         border: none;
         font-size: 24px;
         box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3);
-        cursor: pointer;
       }
 
       #modalCadastro,
@@ -310,6 +324,7 @@
         overflow-y: auto;
         max-height: 90vh;
       }
+
       .local-card {
         background: var(--local-bg);
         border: 2px solid var(--success);
@@ -360,7 +375,7 @@
       </div>
       <button
         onclick="toggleDarkMode()"
-        style="background: none; border: none; font-size: 20px; cursor: pointer"
+        style="background: none; border: none; font-size: 20px"
       >
         🌓
       </button>
@@ -369,14 +384,36 @@
     <div class="container">
       <main id="tab-registros" class="tab-pane active">
         <div class="dash-grid">
-          <div class="dash-card"><span id="dashTotal">0</span>Total</div>
-          <div class="dash-card" style="border-color: var(--success)">
+          <div
+            class="dash-card"
+            id="card-total"
+            onclick="setFiltroStatus('TODOS')"
+          >
+            <span id="dashTotal">0</span>Total
+          </div>
+          <div
+            class="dash-card"
+            id="card-ok"
+            style="border-color: var(--success)"
+            onclick="setFiltroStatus('FECHADO')"
+          >
             <span id="dashPresentes">0</span>OK
           </div>
-          <div class="dash-card" style="border-color: var(--warning)">
+          <div
+            class="dash-card"
+            id="card-pendente"
+            style="border-color: var(--warning)"
+            onclick="setFiltroStatus('PENDENTE')"
+          >
             <span id="dashPendentes">0</span>Abertos
           </div>
-          <div class="dash-card"><span id="dashVazios">0</span>Faltas</div>
+          <div
+            class="dash-card"
+            id="card-vazio"
+            onclick="setFiltroStatus('VAZIO')"
+          >
+            <span id="dashVazios">0</span>Faltas
+          </div>
         </div>
         <input
           type="text"
@@ -539,7 +576,7 @@
         />
         <label
           style="font-size: 10px; font-weight: bold; color: var(--alert-color)"
-          >⚠️ ALERTA</label
+          >⚠️ SELECIONE OU ESCREVA O ALERTA</label
         >
         <input
           list="listaAlertas"
@@ -557,6 +594,9 @@
             🤝 AGENTE DE INCLUSÃO SOCIAL
           </option>
           <option value="SUPERVISOR JUMPER">⚡ SUPERVISOR JUMPER</option>
+          <option value="SUPERVISOR EMPRESA DE LIMPEZA">
+            🧹 SUPERVISOR EMPRESA DE LIMPEZA
+          </option>
         </datalist>
         <div style="display: flex; gap: 10px">
           <button class="btn" onclick="fecharModalCadastro()">Cancelar</button>
@@ -573,7 +613,7 @@
 
     <div id="modalSenha">
       <div class="modal-box">
-        <h3>Senha Admin</h3>
+        <h3>Alterar Senha Admin</h3>
         <input
           type="password"
           id="inputNovaSenha"
@@ -585,8 +625,9 @@
             class="btn"
             onclick="document.getElementById('modalSenha').style.display='none'"
           >
-            Sair</button
-          ><button
+            Sair
+          </button>
+          <button
             class="btn"
             style="background: var(--success); color: white"
             onclick="salvarNovaSenha()"
@@ -596,6 +637,7 @@
         </div>
       </div>
     </div>
+
     <div id="pontoEditModal">
       <div class="modal-box">
         <h3 id="modalFuncionarioNome">Ajustar Ponto</h3>
@@ -604,10 +646,11 @@
           id="modalMarcacoes"
           class="search-input"
           oninput="aplicarMascaraPonto(this)"
-        /><input type="hidden" id="modalFuncionarioId" />
+        />
+        <input type="hidden" id="modalFuncionarioId" />
         <div style="display: flex; gap: 10px">
-          <button class="btn" onclick="closePontoEditModal()">Sair</button
-          ><button
+          <button class="btn" onclick="closePontoEditModal()">Sair</button>
+          <button
             class="btn"
             style="background: var(--success); color: white"
             onclick="savePontoEditModal()"
@@ -635,9 +678,10 @@
       let dadosFuncionarios = [];
       let logsAuditoria = [];
       let dataSelecionadaISO = new Date().toISOString().slice(0, 10);
+      let filtroStatusDashboard = "TODOS"; // Variável para controlar o filtro do dashboard
       const PASS_KEY = "ponto_admin_pass";
 
-      // Monitoramento
+      // Monitoramento Central do Firebase
       db.ref("funcionarios").on("value", (s) => {
         const val = s.val();
         dadosFuncionarios = val
@@ -654,22 +698,130 @@
           renderizarLogs();
         });
 
-      // Funções Principais
-      function atualizarDashboard() {
-        let ok = 0,
-          pen = 0,
-          vaz = 0;
-        dadosFuncionarios.forEach((f) => {
-          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
-          if (m.length === 0) vaz++;
-          else if (m.length % 2 !== 0) pen++;
-          else ok++;
+      function renderizarLogs() {
+        const list = document.getElementById("logList");
+        list.innerHTML = logsAuditoria
+          .map(
+            (l) => `<div class="log-item"><b>[${l.data}]</b> ${l.acao}</div>`
+          )
+          .join("");
+      }
+
+      function registrarLog(msg) {
+        const data = new Date().toLocaleString("pt-BR");
+        db.ref("auditoria").push({ data, acao: msg });
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.innerText = msg;
+        t.className = "show";
+        setTimeout(() => {
+          t.className = t.className.replace("show", "");
+        }, 3000);
+      }
+
+      function aplicarMascaraTelefone(i) {
+        let v = i.value.replace(/\D/g, "");
+        if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
+        if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
+        i.value = v;
+      }
+
+      function aplicarMascaraPlaca(i) {
+        let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (v.length === 7 && /^[A-Z]{3}[0-9]{4}$/.test(v)) {
+          v = v.substring(0, 3) + "-" + v.substring(3, 7);
+        }
+        i.value = v;
+      }
+
+      function aplicarMascaraPonto(i) {
+        let v = i.value.replace(/\D/g, "");
+        let f = "";
+        for (let j = 0; j < v.length; j++) {
+          if (j > 0 && j % 6 === 0) f += ", ";
+          else if (j > 0 && j % 2 === 0 && j % 6 !== 0) f += ":";
+          f += v[j];
+        }
+        i.value = f;
+      }
+
+      function notificarGrupo(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*NOME:* ${
+          f.nome
+        }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
+          f.alertaAtivo
+        }\n\n_PONTO PRO v5.1 - SISTEMA CRIADO E DESENVOLVIDO POR RODRIGO DEV._`;
+        const el = document.createElement("textarea");
+        el.value = texto;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        showToast("✅ Copiado! Abrindo WhatsApp...");
+        setTimeout(() => {
+          window.location.href = `whatsapp://send?text=${encodeURIComponent(
+            texto
+          )}`;
+        }, 600);
+      }
+
+      function enviarZapIndividual(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const msg = f.alertaAtivo
+          ? `Olá ${f.nome}, o seu veículo (${f.placa || ""}) está com: *${
+              f.alertaAtivo
+            }*.`
+          : `Olá ${f.nome}, tudo bem?`;
+        window.open(
+          `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
+            /\D/g,
+            ""
+          )}&text=${encodeURIComponent(msg)}`,
+          "_blank"
+        );
+      }
+
+      function baterPonto(id) {
+        const agora = new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
         });
-        document.getElementById("dashTotal").innerText =
-          dadosFuncionarios.length;
-        document.getElementById("dashPresentes").innerText = ok;
-        document.getElementById("dashPendentes").innerText = pen;
-        document.getElementById("dashVazios").innerText = vaz;
+        const ref = db.ref(
+          `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
+        );
+        ref.get().then((s) => {
+          let m = s.val() || [];
+          m.push(agora);
+          ref.set(m).then(() => {
+            showToast("⏰ Ponto registrado com sucesso!");
+          });
+        });
+      }
+
+      // Função para definir o filtro baseado no clique do Dashboard
+      function setFiltroStatus(status) {
+        filtroStatusDashboard = status;
+
+        // Remove destaque visual de todos e adiciona no clicado
+        document
+          .querySelectorAll(".dash-card")
+          .forEach((c) => c.classList.remove("active-filter"));
+        if (status === "TODOS")
+          document.getElementById("card-total").classList.add("active-filter");
+        if (status === "FECHADO")
+          document.getElementById("card-ok").classList.add("active-filter");
+        if (status === "PENDENTE")
+          document
+            .getElementById("card-pendente")
+            .classList.add("active-filter");
+        if (status === "VAZIO")
+          document.getElementById("card-vazio").classList.add("active-filter");
+
+        renderizarCards();
       }
 
       function renderizarCards() {
@@ -678,10 +830,29 @@
           .getElementById("searchInput")
           .value.toUpperCase();
         container.innerHTML = "";
+
         dadosFuncionarios
-          .filter((f) =>
-            (f.nome + (f.placa || "")).toUpperCase().includes(busca)
-          )
+          .filter((f) => {
+            const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
+            const statusAtual =
+              m.length === 0
+                ? "VAZIO"
+                : m.length % 2 !== 0
+                ? "PENDENTE"
+                : "FECHADO";
+
+            // Filtro de Busca (Texto)
+            const bateBusca = (f.nome + (f.placa || ""))
+              .toUpperCase()
+              .includes(busca);
+
+            // Filtro de Dashboard (Status)
+            const bateStatus =
+              filtroStatusDashboard === "TODOS" ||
+              statusAtual === filtroStatusDashboard;
+
+            return bateBusca && bateStatus;
+          })
           .forEach((f) => {
             const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
             const status =
@@ -690,6 +861,7 @@
                 : m.length % 2 !== 0
                 ? "PENDENTE"
                 : "FECHADO";
+
             container.innerHTML += `
             <div class="emp-card ${
               f.alertaAtivo ? "has-alert" : ""
@@ -698,9 +870,13 @@
                 f.vinculo || "COLABORADOR"
               }</span>
               <div style="display:flex; justify-content:space-between; align-items:center">
-                <div><b>${f.nome}</b> <span style="color:var(--primary)">[${
-              f.placa || "S/P"
-            }]</span><br><small>${f.funcao}</small></div>
+                <div>
+                   <b style="font-size:15px">${f.nome}</b> 
+                   <span style="color:var(--primary); font-weight:bold; margin-left:5px">[${
+                     f.placa || "S/P"
+                   }]</span>
+                   <br><small>${f.funcao}</small>
+                </div>
                 <span class="status-pill" style="background:${
                   status === "FECHADO"
                     ? "var(--success)"
@@ -729,7 +905,7 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px">
                   <button class="btn" style="background:#3498db; color:white" onclick="event.stopPropagation(); exportarPDFIndividual('${
                     f.id
-                  }')">📄 PDF</button>
+                  }')">📄 PDF Ind.</button>
                   <button class="btn" style="background:#007bff; color:white" onclick="event.stopPropagation(); iniciarEdicaoPonto('${
                     f.id
                   }')">✏️ Ponto</button>
@@ -743,56 +919,10 @@
               </div>
               <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px; padding:12px" onclick="event.stopPropagation(); baterPonto('${
                 f.id
-              }')">REGISTRAR PONTO</button>
+              }')">REGISTRAR AGORA</button>
             </div>`;
           });
         atualizarDashboard();
-      }
-
-      function baterPonto(id) {
-        const agora = new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        const ref = db.ref(
-          `funcionarios/${id}/historico/${dataSelecionadaISO}/marcacoes`
-        );
-        ref.get().then((s) => {
-          let m = s.val() || [];
-          m.push(agora);
-          ref.set(m).then(() => showToast("⏰ Ponto registrado!"));
-        });
-      }
-
-      function notificarGrupo(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const texto = `*OCORRÊNCIA DE PÁTIO* 🚨\n\n*NOME:* ${
-          f.nome
-        }\n*PLACA:* ${f.placa || "---"}\n*OCORRÊNCIA:* ${
-          f.alertaAtivo
-        }\n\n_SISTEMA PONTO PRO_`;
-        window.open(
-          `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
-          "_blank"
-        );
-      }
-
-      function enviarZapIndividual(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        if (!f.telefone) return alert("Sem telefone.");
-        const msg = f.alertaAtivo
-          ? `Olá ${f.nome}, o seu veículo (${f.placa || ""}) está com: *${
-              f.alertaAtivo
-            }*.`
-          : `Olá ${f.nome}!`;
-        window.open(
-          `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
-            /\D/g,
-            ""
-          )}&text=${encodeURIComponent(msg)}`,
-          "_blank"
-        );
       }
 
       function renderizarPainelPresenca() {
@@ -804,13 +934,16 @@
           const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
           if (m.length % 2 !== 0) {
             count++;
-            p.innerHTML += `<div class="local-card"><b>${
-              f.nome
-            }</b><br><small>[${
-              f.placa || "S/P"
-            }]</small><br><span class="local-timer" data-inicio="${
-              m[m.length - 1]
-            }">...</span></div>`;
+            p.innerHTML += `
+              <div class="local-card">
+                <b>${f.nome || "DESCONHECIDO"}</b><br>
+                <small style="color:var(--primary)">[${
+                  f.placa || "S/P"
+                }]</small><br>
+                <span class="local-timer" data-inicio="${
+                  m[m.length - 1]
+                }">...</span>
+              </div>`;
           }
         });
         c.innerText = count;
@@ -851,160 +984,12 @@
         db.ref("funcionarios/" + id)
           .set(d)
           .then(() => {
-            registrarLog(`Editou: ${d.nome}`);
+            registrarLog(`Adm editou: ${d.nome}`);
             fecharModalCadastro();
-            showToast("✅ Salvo!");
+            showToast("✅ Dados salvos!");
           });
       }
 
-      function iniciarEdicaoCadastro(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("editFuncId").value = f.id;
-        document.getElementById("formNome").value = f.nome;
-        document.getElementById("formVinculo").value =
-          f.vinculo || "COLABORADOR";
-        document.getElementById("formTelefone").value = f.telefone || "";
-        document.getElementById("formFuncao").value = f.funcao || "";
-        document.getElementById("formPlaca").value = f.placa || "";
-        document.getElementById("formVeiculoModelo").value =
-          f.veiculoModelo || "";
-        document.getElementById("formAlerta").value = f.alertaAtivo || "";
-        document.getElementById("modalCadastro").style.display = "flex";
-      }
-
-      // Funções de Suporte e Auditoria
-      function registrarLog(msg) {
-        db.ref("auditoria").push({
-          data: new Date().toLocaleString("pt-BR"),
-          acao: msg,
-        });
-      }
-      function renderizarLogs() {
-        document.getElementById("logList").innerHTML = logsAuditoria
-          .map(
-            (l) => `<div class="log-item"><b>[${l.data}]</b> ${l.acao}</div>`
-          )
-          .join("");
-      }
-      function showToast(msg) {
-        const t = document.getElementById("toast");
-        t.innerText = msg;
-        t.className = "show";
-        setTimeout(() => {
-          t.className = "";
-        }, 3000);
-      }
-      function aplicarMascaraTelefone(i) {
-        let v = i.value.replace(/\D/g, "");
-        if (v.length > 2) v = "(" + v.substring(0, 2) + ") " + v.substring(2);
-        if (v.length > 9) v = v.substring(0, 10) + "-" + v.substring(10);
-        i.value = v;
-      }
-      function aplicarMascaraPlaca(i) {
-        let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-        if (v.length === 7 && /^[A-Z]{3}[0-9]{4}$/.test(v))
-          v = v.substring(0, 3) + "-" + v.substring(3, 7);
-        i.value = v;
-      }
-      function aplicarMascaraPonto(i) {
-        let v = i.value.replace(/\D/g, "");
-        let f = "";
-        for (let j = 0; j < v.length; j++) {
-          if (j > 0 && j % 6 === 0) f += ", ";
-          else if (j > 0 && j % 2 === 0 && j % 6 !== 0) f += ":";
-          f += v[j];
-        }
-        i.value = f;
-      }
-      function switchTab(id, btn) {
-        document
-          .querySelectorAll(".tab-pane")
-          .forEach((p) => p.classList.remove("active"));
-        document
-          .querySelectorAll(".nav-btn")
-          .forEach((b) => b.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-        btn.classList.add("active");
-      }
-      function toggleDarkMode() {
-        document.body.classList.toggle("dark-mode");
-      }
-      function atualizarDataFiltro() {
-        dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
-        renderizarCards();
-        renderizarPainelPresenca();
-      }
-      function abrirModalCadastro() {
-        document.getElementById("editFuncId").value = "";
-        document.getElementById("modalCadastro").style.display = "flex";
-      }
-      function fecharModalCadastro() {
-        document.getElementById("modalCadastro").style.display = "none";
-      }
-      function iniciarEdicaoPonto(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        document.getElementById("modalFuncionarioId").value = id;
-        document.getElementById("modalFuncionarioNome").innerText = f.nome;
-        document.getElementById("modalMarcacoes").value = (
-          f.historico?.[dataSelecionadaISO]?.marcacoes || []
-        ).join(", ");
-        document.getElementById("pontoEditModal").style.display = "flex";
-      }
-      function savePontoEditModal() {
-        const id = document.getElementById("modalFuncionarioId").value;
-        const m = document
-          .getElementById("modalMarcacoes")
-          .value.split(",")
-          .map((t) => t.trim())
-          .filter((t) => t);
-        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
-          .update({ marcacoes: m })
-          .then(() => {
-            document.getElementById("pontoEditModal").style.display = "none";
-          });
-      }
-      function closePontoEditModal() {
-        document.getElementById("pontoEditModal").style.display = "none";
-      }
-      function validarGestor(cb) {
-        const s = localStorage.getItem(PASS_KEY) || "1234";
-        const t = prompt("Senha:");
-        if (t === s) cb();
-        else if (t !== null) alert("Erro!");
-      }
-      function exportarPDFIndividual(id) {
-        const f = dadosFuncionarios.find((x) => x.id === id);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text(`Ponto: ${f.nome}`, 14, 15);
-        const hist = f.historico || {};
-        const rows = Object.keys(hist)
-          .sort()
-          .reverse()
-          .map((d) => [
-            d.split("-").reverse().join("/"),
-            hist[d].marcacoes.join(" | "),
-          ]);
-        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 30 });
-        doc.save(`Ponto_${f.nome}.pdf`);
-      }
-      function excluirFuncionario(id) {
-        if (confirm("Excluir?")) db.ref("funcionarios/" + id).remove();
-      }
-      function abrirGerenciadorSenha() {
-        document.getElementById("modalSenha").style.display = "flex";
-      }
-      function abrirAuditoria() {
-        document.getElementById("auditoriaBox").style.display = "block";
-      }
-      function salvarNovaSenha() {
-        const n = document.getElementById("inputNovaSenha").value;
-        if (n) {
-          localStorage.setItem(PASS_KEY, n);
-          alert("Salvo!");
-          document.getElementById("modalSenha").style.display = "none";
-        }
-      }
       function exportarExcel() {
         let csv = "\ufeffNome;Placa;Batidas\n";
         dadosFuncionarios.forEach(
@@ -1018,6 +1003,7 @@
         a.download = `ponto.csv`;
         a.click();
       }
+
       function exportarPDFGeral() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF("l");
@@ -1034,6 +1020,48 @@
         });
         doc.save(`Ponto_Geral.pdf`);
       }
+
+      function exportarPDFIndividual(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`Espelho de Ponto: ${f.nome}`, 14, 15);
+        const hist = f.historico || {};
+        const rows = Object.keys(hist)
+          .sort()
+          .reverse()
+          .map((data) => [
+            data.split("-").reverse().join("/"),
+            hist[data].marcacoes.join(" | "),
+          ]);
+        doc.autoTable({ head: [["Data", "Batidas"]], body: rows, startY: 30 });
+        doc.save(`Ponto_${f.nome}.pdf`);
+      }
+
+      function excluirFuncionario(id) {
+        if (confirm("Excluir registro?")) {
+          db.ref("funcionarios/" + id)
+            .remove()
+            .then(() => registrarLog("Adm removeu registro"));
+        }
+      }
+
+      function validarGestor(cb) {
+        const s = localStorage.getItem(PASS_KEY) || "1234";
+        const t = prompt("Senha:");
+        if (t === s) cb();
+        else if (t !== null) alert("Erro!");
+      }
+
+      function salvarNovaSenha() {
+        const n = document.getElementById("inputNovaSenha").value;
+        if (n) {
+          localStorage.setItem(PASS_KEY, n);
+          alert("Salvo!");
+          document.getElementById("modalSenha").style.display = "none";
+        }
+      }
+
       function fazerBackup() {
         const b = new Blob(
           [
@@ -1046,9 +1074,10 @@
         );
         const a = document.createElement("a");
         a.href = URL.createObjectURL(b);
-        a.download = `backup.json`;
+        a.download = `backup_v5_1.json`;
         a.click();
       }
+
       function importarJSON(event) {
         const file = event.target.files[0];
         const reader = new FileReader();
@@ -1063,8 +1092,108 @@
         reader.readAsText(file);
       }
 
+      function switchTab(id, btn) {
+        document
+          .querySelectorAll(".tab-pane")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+        btn.classList.add("active");
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark-mode");
+      }
+
+      function atualizarDataFiltro() {
+        dataSelecionadaISO = document.getElementById("inputDataFiltro").value;
+        renderizarCards();
+        renderizarPainelPresenca();
+      }
+
+      function atualizarDashboard() {
+        let ok = 0,
+          pen = 0,
+          vaz = 0;
+        dadosFuncionarios.forEach((f) => {
+          const m = f.historico?.[dataSelecionadaISO]?.marcacoes || [];
+          if (m.length === 0) vaz++;
+          else if (m.length % 2 !== 0) pen++;
+          else ok++;
+        });
+        document.getElementById("dashTotal").innerText =
+          dadosFuncionarios.length;
+        document.getElementById("dashPresentes").innerText = ok;
+        document.getElementById("dashPendentes").innerText = pen;
+        document.getElementById("dashVazios").innerText = vaz;
+      }
+
+      function abrirGerenciadorSenha() {
+        document.getElementById("modalSenha").style.display = "flex";
+      }
+      function abrirAuditoria() {
+        document.getElementById("auditoriaBox").style.display = "block";
+      }
+      function fecharModalCadastro() {
+        document.getElementById("modalCadastro").style.display = "none";
+      }
+      function closePontoEditModal() {
+        document.getElementById("pontoEditModal").style.display = "none";
+      }
+
+      function abrirModalCadastro() {
+        document.getElementById("editFuncId").value = "";
+        document.getElementById("formNome").value = "";
+        document.getElementById("formTelefone").value = "";
+        document.getElementById("formFuncao").value = "";
+        document.getElementById("formPlaca").value = "";
+        document.getElementById("formVeiculoModelo").value = "";
+        document.getElementById("formAlerta").value = "";
+        document.getElementById("modalCadastro").style.display = "flex";
+      }
+
+      function iniciarEdicaoPonto(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        document.getElementById("modalFuncionarioId").value = id;
+        document.getElementById("modalFuncionarioNome").innerText = f.nome;
+        document.getElementById("modalMarcacoes").value = (
+          f.historico?.[dataSelecionadaISO]?.marcacoes || []
+        ).join(", ");
+        document.getElementById("pontoEditModal").style.display = "flex";
+      }
+
+      function savePontoEditModal() {
+        const id = document.getElementById("modalFuncionarioId").value;
+        const m = document
+          .getElementById("modalMarcacoes")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter((t) => t);
+        db.ref(`funcionarios/${id}/historico/${dataSelecionadaISO}`)
+          .update({ marcacoes: m })
+          .then(() => closePontoEditModal());
+      }
+
+      function iniciarEdicaoCadastro(id) {
+        const f = dadosFuncionarios.find((x) => x.id === id);
+        document.getElementById("editFuncId").value = f.id;
+        document.getElementById("formNome").value = f.nome;
+        document.getElementById("formTelefone").value = f.telefone || "";
+        document.getElementById("formFuncao").value = f.funcao || "";
+        document.getElementById("formPlaca").value = f.placa || "";
+        document.getElementById("formVeiculoModelo").value =
+          f.veiculoModelo || "";
+        document.getElementById("formAlerta").value = f.alertaAtivo || "";
+        document.getElementById("modalCadastro").style.display = "flex";
+      }
+
       setInterval(atualizarCronometros, 1000);
       document.getElementById("inputDataFiltro").value = dataSelecionadaISO;
+
+      // Inicia com o filtro TOTAL selecionado visualmente
+      document.getElementById("card-total").classList.add("active-filter");
     </script>
   </body>
 </html>
