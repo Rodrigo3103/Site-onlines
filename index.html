@@ -6,10 +6,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v6.3</title>
+    <title>PONTO PRO v6.5</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
       :root {
@@ -235,25 +237,13 @@
       .tab-pane.active {
         display: block;
       }
-      .offline-badge {
-        display: none;
-        background: var(--danger);
-        color: white;
-        text-align: center;
-        font-size: 10px;
-        padding: 2px;
-      }
     </style>
   </head>
   <body>
-    <div id="offline-msg" class="offline-badge">
-      MODO OFFLINE - Dados do Cache
-    </div>
-
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v6.3</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v6.5</small>
         </h1>
         <input
           type="date"
@@ -304,7 +294,12 @@
       </section>
 
       <section id="tab-dia" class="tab-pane">
-        <h3>📖 Registro do Dia</h3>
+        <h3>
+          📖 Registro do Dia
+          <small style="font-size: 10px; font-weight: normal"
+            >(Ordenado por entrada)</small
+          >
+        </h3>
         <div
           style="
             width: 100%;
@@ -312,9 +307,11 @@
             background: var(--bg-card);
             border-radius: 10px;
             border: 1px solid var(--border);
+            margin-bottom: 10px;
           "
         >
           <table
+            id="tabelaRegistroDia"
             style="
               width: 100%;
               border-collapse: collapse;
@@ -333,6 +330,9 @@
             <tbody id="listaRegistroDia"></tbody>
           </table>
         </div>
+        <button class="btn" style="background: #e74c3c" onclick="gerarPDF()">
+          📄 Gerar Relatório PDF
+        </button>
       </section>
 
       <section id="tab-tools" class="tab-pane">
@@ -345,15 +345,29 @@
           🔑 Alterar Senha Admin
         </button>
         <button class="btn" style="background: #25d366" onclick="exportarCSV()">
-          📊 Exportar Excel
+          📊 Exportar Excel (CSV)
+        </button>
+        <button
+          class="btn"
+          style="background: #0984e3"
+          onclick="exportarJSON()"
+        >
+          📤 Exportar Backup JSON
         </button>
         <button
           class="btn"
           style="background: #e67e22"
-          onclick="limparBackupLocal()"
+          onclick="validarGestor(() => document.getElementById('fileImport').click())"
         >
-          🧹 Limpar Cache Local
+          📥 Importar Backup JSON
         </button>
+        <input
+          type="file"
+          id="fileImport"
+          style="display: none"
+          accept=".json"
+          onchange="importarJSON(event)"
+        />
       </section>
     </div>
 
@@ -467,17 +481,15 @@
 
       let funcionarios = [];
       let dataISO = new Date().toISOString().slice(0, 10);
-      let horariosTemporarios = []; // Usado para edição manual no modal
+      let horariosTemporarios = [];
 
       db.ref("funcionarios").on("value", (s) => {
         funcionarios = s.val() ? Object.values(s.val()) : [];
-        localStorage.setItem("ponto_backup", JSON.stringify(funcionarios));
         renderizar();
         renderizarLocal();
         renderizarRegistroDia();
       });
 
-      // FUNÇÕES DE MÁSCARA
       function mascaraPlaca(i) {
         let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
         if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
@@ -491,7 +503,6 @@
         i.value = v;
       }
 
-      // RENDERIZADORES
       function renderizar() {
         const container = document.getElementById("cardsContainer");
         const busca = document
@@ -556,7 +567,7 @@
                 </div>
                 <button class="btn" style="background:var(--primary); margin-top:10px" onclick="baterPonto('${
                   f.id
-                }')">REGISTRAR AGORA</button>
+                }')">REGISTRAR PONTO</button>
             `;
             container.appendChild(card);
           });
@@ -566,45 +577,139 @@
         document.getElementById("dashVazio").innerText = vaz;
       }
 
-      // EDIÇÃO DE PONTO ELETRÔNICO (LÓGICA DO MODAL)
+      function renderizarLocal() {
+        const painel = document.getElementById("painelLocal");
+        painel.innerHTML = "";
+        funcionarios.forEach((f) => {
+          const h = f.historico?.[dataISO]?.marcacoes || [];
+          if (h.length > 0 && h.length % 2 !== 0) {
+            painel.innerHTML += `<div style="background:var(--dodgeblue); color:white; padding:15px; border-radius:12px; margin-bottom:10px">
+                <b>${f.nome}</b><br><small>Placa: ${
+              f.placa || "N/A"
+            } | Entrada: ${h[h.length - 1]}</small>
+            </div>`;
+          }
+        });
+      }
+
+      // NOVO: Renderizar e Ordenar por Entrada
+      function renderizarRegistroDia() {
+        const lista = document.getElementById("listaRegistroDia");
+        lista.innerHTML = "";
+
+        // Filtra quem tem marcação e ordena pelo primeiro horário (marcacoes[0])
+        const filtrados = funcionarios
+          .filter((f) => f.historico?.[dataISO]?.marcacoes?.length > 0)
+          .sort((a, b) => {
+            const hA = a.historico[dataISO].marcacoes[0];
+            const hB = b.historico[dataISO].marcacoes[0];
+            return hA.localeCompare(hB);
+          });
+
+        filtrados.forEach((f) => {
+          const h = f.historico[dataISO].marcacoes;
+          lista.innerHTML += `<tr>
+                <td style="padding:10px"><b>${f.nome}</b></td><td>${
+            f.placa || ""
+          }</td>
+                <td style="color:var(--success)">${
+                  h[0]
+                }</td><td style="color:var(--danger)">${
+            h.length % 2 === 0 ? h[h.length - 1] : "Local"
+          }</td>
+            </tr>`;
+        });
+      }
+
+      async function gerarPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`Relatorio de Ponto - Data: ${dataISO}`, 14, 15);
+
+        const filtrados = funcionarios
+          .filter((f) => f.historico?.[dataISO]?.marcacoes?.length > 0)
+          .sort((a, b) =>
+            a.historico[dataISO].marcacoes[0].localeCompare(
+              b.historico[dataISO].marcacoes[0]
+            )
+          );
+
+        const rows = filtrados.map((f) => {
+          const h = f.historico[dataISO].marcacoes;
+          return [
+            f.nome,
+            f.placa || "",
+            h[0],
+            h.length % 2 === 0 ? h[h.length - 1] : "No Local",
+          ];
+        });
+
+        doc.autoTable({
+          head: [["Nome", "Placa", "Entrada", "Saida"]],
+          body: rows,
+          startY: 25,
+        });
+        doc.save(`ponto_${dataISO}.pdf`);
+      }
+
+      function exportarJSON() {
+        const dataStr =
+          "data:text/json;charset=utf-8," +
+          encodeURIComponent(JSON.stringify(funcionarios));
+        const downloadAnchorNode = document.createElement("a");
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "ponto_pro_backup.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+      }
+
+      function importarJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (confirm("Sobrescrever todos os dados?")) {
+              const updates = {};
+              data.forEach((item) => {
+                updates[item.id] = item;
+              });
+              db.ref("funcionarios")
+                .set(updates)
+                .then(() => alert("Importado!"));
+            }
+          } catch (err) {
+            alert("Erro no JSON.");
+          }
+        };
+        reader.readAsText(file);
+      }
+
       function abrirEdicao(id) {
         const f = funcionarios.find((x) => x.id === id);
-        document.getElementById("modalTitle").innerText =
-          "Editar Cadastro e Ponto";
         document.getElementById("formId").value = f.id;
         document.getElementById("formNome").value = f.nome;
         document.getElementById("formPlaca").value = f.placa || "";
         document.getElementById("formTelefone").value = f.telefone || "";
         document.getElementById("formFuncao").value = f.funcao || "";
         document.getElementById("formOcorrencia").value = f.ocorrencia || "";
-
-        // Carrega horários do dia para edição
         horariosTemporarios = [...(f.historico?.[dataISO]?.marcacoes || [])];
         renderizarHorariosEdicao();
-
         document.getElementById("modalCadastro").style.display = "flex";
       }
 
       function renderizarHorariosEdicao() {
         const container = document.getElementById("listaHorariosEdit");
         container.innerHTML = "";
-        horariosTemporarios.forEach((h, index) => {
+        horariosTemporarios.forEach((h, idx) => {
           container.innerHTML += `
                 <div class="edit-ponto-item">
-                    <input type="time" step="1" value="${h}" onchange="atualizarHoraTemporaria(${index}, this.value)" style="border:none; background:none; font-weight:bold">
-                    <button onclick="removerHoraTemporaria(${index})" style="background:none; border:none; color:var(--danger); cursor:pointer">🗑️</button>
+                    <input type="time" step="1" value="${h}" onchange="horariosTemporarios[${idx}]=this.value" style="border:none;background:none;font-weight:bold">
+                    <button onclick="horariosTemporarios.splice(${idx},1);renderizarHorariosEdicao()" style="border:none;background:none;color:var(--danger)">🗑️</button>
                 </div>`;
         });
-      }
-
-      function atualizarHoraTemporaria(index, valor) {
-        if (valor.length === 5) valor += ":00"; // Adiciona segundos se faltar
-        horariosTemporarios[index] = valor;
-      }
-
-      function removerHoraTemporaria(index) {
-        horariosTemporarios.splice(index, 1);
-        renderizarHorariosEdicao();
       }
 
       function adicionarHorarioManual() {
@@ -615,8 +720,7 @@
       function salvarAlteracoesCompletas() {
         const id = document.getElementById("formId").value;
         const f = funcionarios.find((x) => x.id === id);
-
-        const dadosAtualizados = {
+        const obj = {
           ...f,
           nome: document.getElementById("formNome").value.toUpperCase(),
           placa: document.getElementById("formPlaca").value.toUpperCase(),
@@ -626,22 +730,23 @@
             .getElementById("formOcorrencia")
             .value.toUpperCase(),
         };
-
-        // Garante que a estrutura de histórico existe
-        if (!dadosAtualizados.historico) dadosAtualizados.historico = {};
-        if (!dadosAtualizados.historico[dataISO])
-          dadosAtualizados.historico[dataISO] = {};
-
-        // Salva os horários editados
-        dadosAtualizados.historico[dataISO].marcacoes =
-          horariosTemporarios.sort();
-
+        if (!obj.historico) obj.historico = {};
+        if (!obj.historico[dataISO]) obj.historico[dataISO] = {};
+        obj.historico[dataISO].marcacoes = horariosTemporarios.sort();
         db.ref("funcionarios/" + id)
-          .set(dadosAtualizados)
+          .set(obj)
           .then(() => fecharModais());
       }
 
-      // OUTRAS FUNÇÕES
+      function validarGestor(cb) {
+        db.ref("config/admin_pass").once("value", (s) => {
+          const p = s.val() || "1234";
+          const t = prompt("Senha Admin:");
+          if (t === p) cb();
+          else if (t !== null) alert("Incorreta!");
+        });
+      }
+
       function baterPonto(id) {
         const agora = new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
@@ -657,37 +762,6 @@
           });
       }
 
-      function zapPrivado(id) {
-        const f = funcionarios.find((x) => x.id === id);
-        if (!f.telefone) return alert("Sem WhatsApp!");
-        window.open(
-          `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
-            /\D/g,
-            ""
-          )}&text=Olá ${f.nome}, aviso: ${f.ocorrencia || "Ok"}`,
-          "_blank"
-        );
-      }
-
-      function zapGrupo(id) {
-        const f = funcionarios.find((x) => x.id === id);
-        window.open(
-          `https://api.whatsapp.com/send?text=⚠️ *ALERTA:* ${f.nome} (${
-            f.placa
-          }) - ${f.ocorrencia || "Informação"}`,
-          "_blank"
-        );
-      }
-
-      function validarGestor(cb) {
-        db.ref("config/admin_pass").once("value", (s) => {
-          const pass = s.val() || "1234";
-          const t = prompt("Senha Admin:");
-          if (t === pass) cb();
-          else if (t !== null) alert("Senha Incorreta!");
-        });
-      }
-
       function switchTab(id, btn) {
         document
           .querySelectorAll(".tab-pane, .nav-btn")
@@ -697,7 +771,6 @@
       }
 
       function abrirModalCadastro() {
-        document.getElementById("modalTitle").innerText = "Novo Cadastro";
         document.getElementById("formId").value = "";
         document
           .querySelectorAll("#modalCadastro input")
@@ -705,6 +778,28 @@
         horariosTemporarios = [];
         document.getElementById("listaHorariosEdit").innerHTML = "";
         document.getElementById("modalCadastro").style.display = "flex";
+      }
+
+      function zapPrivado(id) {
+        const f = funcionarios.find((x) => x.id === id);
+        if (!f.telefone) return alert("Sem Whats!");
+        window.open(
+          `https://api.whatsapp.com/send?phone=55${f.telefone.replace(
+            /\D/g,
+            ""
+          )}&text=Olá ${f.nome}, aviso: ${f.ocorrencia || "Ponto ok"}`,
+          "_blank"
+        );
+      }
+
+      function zapGrupo(id) {
+        const f = funcionarios.find((x) => x.id === id);
+        window.open(
+          `https://api.whatsapp.com/send?text=⚠️ *ALERTA:* ${f.nome} (${
+            f.placa
+          }) - ${f.ocorrencia || "Info"}`,
+          "_blank"
+        );
       }
 
       function fecharModais() {
@@ -718,40 +813,6 @@
         renderizarLocal();
         renderizarRegistroDia();
       }
-
-      function renderizarLocal() {
-        const painel = document.getElementById("painelLocal");
-        painel.innerHTML = "";
-        funcionarios.forEach((f) => {
-          const h = f.historico?.[dataISO]?.marcacoes || [];
-          if (h.length > 0 && h.length % 2 !== 0) {
-            painel.innerHTML += `<div style="background:var(--dodgeblue); color:white; padding:15px; border-radius:12px; margin-bottom:10px">
-                <b>${f.nome}</b><br><small>Entrada: ${h[h.length - 1]}</small>
-            </div>`;
-          }
-        });
-      }
-
-      function renderizarRegistroDia() {
-        const lista = document.getElementById("listaRegistroDia");
-        lista.innerHTML = "";
-        funcionarios
-          .filter((f) => f.historico?.[dataISO]?.marcacoes?.length > 0)
-          .forEach((f) => {
-            const h = f.historico[dataISO].marcacoes;
-            lista.innerHTML += `<tr>
-                <td style="padding:10px"><b>${f.nome}</b></td><td>${
-              f.placa || ""
-            }</td>
-                <td style="color:var(--success)">${
-                  h[0]
-                }</td><td style="color:var(--danger)">${
-              h.length % 2 === 0 ? h[h.length - 1] : "Local"
-            }</td>
-            </tr>`;
-          });
-      }
-
       function exportarCSV() {
         let c = "Nome;Placa;Entrada;Saida\n";
         funcionarios.forEach((f) => {
@@ -760,16 +821,10 @@
             h.length % 2 === 0 ? h[h.length - 1] : ""
           }\n`;
         });
-        const b = new Blob([c], { type: "text/csv" });
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(b);
+        a.href = URL.createObjectURL(new Blob([c], { type: "text/csv" }));
         a.download = "ponto.csv";
         a.click();
-      }
-
-      function limparBackupLocal() {
-        localStorage.clear();
-        alert("Cache limpo!");
       }
       function alterarSenhaAdmin() {
         const n = prompt("Nova senha:");
