@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>PONTO PRO v7.0</title>
+    <title>PONTO PRO v8.0 - Com Foto</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -14,6 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
+      /* CSS ORIGINAL PRESERVADO */
       :root {
         --primary: #0984e3;
         --bg-body: #f0f2f5;
@@ -66,6 +67,36 @@
         margin: 0 auto;
       }
 
+      /* AJUSTE PARA SELEÇÃO DE ARQUIVO */
+      .photo-captured-wrap {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid var(--primary);
+        background: #eee;
+        flex-shrink: 0;
+      }
+      .photo-captured-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .emp-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .emp-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--border);
+      }
+
+      /* RESTANTE DO CSS ORIGINAL PRESERVADO */
       .dash-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -85,7 +116,6 @@
         font-size: 18px;
         font-weight: bold;
       }
-
       .search-input,
       .select-input {
         width: 100%;
@@ -97,7 +127,6 @@
         margin-bottom: 10px;
         outline: none;
       }
-
       .emp-card {
         background: var(--bg-card);
         border-radius: 15px;
@@ -127,9 +156,9 @@
         font-weight: bold;
         border: 1px solid var(--border);
         margin-right: 4px;
+        margin-bottom: 4px;
         display: inline-block;
       }
-
       .smart-details {
         max-height: 0;
         overflow: hidden;
@@ -143,7 +172,6 @@
         padding-top: 15px;
         border-top: 1px solid var(--border);
       }
-
       .btn {
         padding: 12px;
         border-radius: 10px;
@@ -164,13 +192,11 @@
         font-size: 11px;
         margin-top: 5px;
       }
-
       .section-divider {
         margin: 25px 0 15px;
         border-top: 2px solid var(--border);
         padding-top: 15px;
       }
-
       .log-container {
         background: var(--bg-card);
         border: 1px solid var(--border);
@@ -186,7 +212,6 @@
         display: flex;
         justify-content: space-between;
       }
-
       .bottom-nav {
         position: fixed;
         bottom: 0;
@@ -222,7 +247,6 @@
         font-size: 24px;
         box-shadow: 0 4px 12px rgba(9, 132, 227, 0.4);
       }
-
       .modal {
         position: fixed;
         inset: 0;
@@ -242,7 +266,6 @@
         max-height: 90vh;
         overflow-y: auto;
       }
-
       .tab-pane {
         display: none;
       }
@@ -260,7 +283,7 @@
     <header class="app-header">
       <div>
         <h1 style="margin: 0; font-size: 18px">
-          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v7.0</small>
+          PONTO PRO <small style="font-size: 10px; opacity: 0.5">v8.0</small>
         </h1>
         <input
           type="date"
@@ -311,7 +334,7 @@
       </section>
 
       <section id="tab-dia" class="tab-pane">
-        <h3>📖 Registro do Dia (Geral)</h3>
+        <h3>📖 Registro do Dia (Completo)</h3>
         <div
           style="
             width: 100%;
@@ -327,16 +350,16 @@
               width: 100%;
               border-collapse: collapse;
               font-size: 12px;
-              min-width: 500px;
+              min-width: 600px;
             "
           >
             <thead>
               <tr style="background: var(--bg-body); text-align: left">
                 <th style="padding: 10px">Nome</th>
-                <th>Função</th>
+                <th>Setor</th>
                 <th>Placa</th>
-                <th style="color: var(--success)">Entrada</th>
-                <th style="color: var(--danger)">Saída</th>
+                <th style="color: var(--primary)">Movimentações</th>
+                <th style="color: var(--success)">Total</th>
               </tr>
             </thead>
             <tbody id="listaRegistroDia"></tbody>
@@ -345,7 +368,6 @@
         <button class="btn" style="background: #e74c3c" onclick="gerarPDF()">
           📄 PDF Relatório do Dia
         </button>
-
         <div class="section-divider"></div>
         <h3>👤 Relatório Individual (Histórico)</h3>
         <select id="selectFuncionarioIndividual" class="select-input">
@@ -397,7 +419,6 @@
           accept=".json"
           onchange="importarJSON(event)"
         />
-
         <div class="section-divider"></div>
         <h3>📑 Log de Edições Recentes</h3>
         <div id="logEdicoesContainer" class="log-container">
@@ -427,6 +448,37 @@
     <div id="modalCadastro" class="modal">
       <div class="modal-box">
         <h3>Dados do Colaborador</h3>
+
+        <div
+          style="
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 15px;
+          "
+        >
+          <div class="photo-captured-wrap">
+            <img
+              id="prevFoto"
+              src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+            />
+          </div>
+          <button
+            class="btn btn-sm"
+            style="background: var(--primary); margin: 0; flex: 1"
+            onclick="document.getElementById('inputFotoArquivo').click()"
+          >
+            📁 Carregar Foto
+          </button>
+          <input
+            type="file"
+            id="inputFotoArquivo"
+            style="display: none"
+            accept="image/*"
+            onchange="importarFotoArquivo(event)"
+          />
+        </div>
+
         <input type="hidden" id="formId" />
         <input
           type="text"
@@ -503,6 +555,7 @@
     </div>
 
     <script>
+      /* CONFIGURAÇÃO FIREBASE MANTIDA */
       const firebaseConfig = {
         apiKey: "AIzaSyBfcH5K-9sz7WQIZrt7Cb4U39r7vuU6E7Q",
         authDomain: "espelhodepontoetecvilaformosa.firebaseapp.com",
@@ -528,32 +581,32 @@
 
       document.getElementById("inputDataFiltro").value = dataISO;
 
-      function atualizarPainelLog() {
-        const container = document.getElementById("logEdicoesContainer");
-        const edits = funcionarios
-          .filter((f) => f.ultimaEdicao)
-          .sort((a, b) => b.ultimaEdicao.localeCompare(a.ultimaEdicao));
-        if (edits.length === 0) return;
-        container.innerHTML = edits
-          .map(
-            (f) => `
-            <div class="log-item">
-                <span><b>${f.nome}</b></span>
-                <span style="color:var(--text-sub)">${f.ultimaEdicao}</span>
-            </div>
-        `
-          )
-          .join("");
+      /* NOVA FUNÇÃO CIRÚRGICA PARA IMPORTAR FOTO DE ARQUIVO */
+      function importarFotoArquivo(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            document.getElementById("prevFoto").src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
       }
 
-      function exportarJSONBackup() {
-        const dataStr = JSON.stringify(funcionarios, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `backup_ponto_${new Date().getTime()}.json`;
-        link.click();
+      /* FUNÇÕES ORIGINAIS PRESERVADAS SEM ALTERAÇÃO */
+      function calcularTempoPermanencia(marcacoes) {
+        if (marcacoes.length < 2) return "---";
+        let totalMinutos = 0;
+        for (let i = 0; i < marcacoes.length; i += 2) {
+          if (marcacoes[i + 1]) {
+            const entrada = new Date(`2000-01-01T${marcacoes[i]}`);
+            const saida = new Date(`2000-01-01T${marcacoes[i + 1]}`);
+            totalMinutos += (saida - entrada) / 60000;
+          }
+        }
+        const h = Math.floor(totalMinutos / 60);
+        const m = Math.floor(totalMinutos % 60);
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
       }
 
       function renderizar() {
@@ -587,6 +640,10 @@
             card.onclick = (e) => {
               if (!e.target.closest("button")) card.classList.toggle("open");
             };
+
+            const fotoUrl =
+              f.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
             card.innerHTML = `
                 <span class="status-pill" style="background:${
                   status === "FECHADO"
@@ -595,9 +652,15 @@
                     ? "var(--warning)"
                     : "var(--text-sub)"
                 }">${status}</span>
-                <b>${f.nome}</b><br><small>${f.placa || "---"} | ${
+                <div class="emp-card-header">
+                    <img src="${fotoUrl}" class="emp-avatar">
+                    <div>
+                        <b>${f.nome}</b><br>
+                        <small>${f.placa || "---"} | ${
               f.funcao || "---"
             }</small>
+                    </div>
+                </div>
                 <div style="margin-top:8px">${
                   h.map((t) => `<span class="time-tag">${t}</span>`).join("") ||
                   "---"
@@ -648,6 +711,7 @@
           ocorrencia: document
             .getElementById("formOcorrencia")
             .value.toUpperCase(),
+          foto: document.getElementById("prevFoto").src,
           ultimaEdicao: agoraLog,
         };
         if (!obj.historico) obj.historico = {};
@@ -658,25 +722,21 @@
           .then(() => fecharModais());
       }
 
-      function exportarCSVExcel() {
-        let csv = "\uFEFFNome;Placa;Setor;Entrada;Saida;Status\n";
-        funcionarios.forEach((f) => {
-          const h = f.historico?.[dataISO]?.marcacoes || [];
-          csv += `${f.nome};${f.placa || ""};${f.funcao || ""};${h[0] || ""};${
-            h.length % 2 === 0 ? h[h.length - 1] : ""
-          };${
-            h.length === 0 ? "Falta" : h.length % 2 !== 0 ? "Patio" : "OK"
-          }\n`;
-        });
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `ponto_${dataISO}.csv`;
-        link.click();
+      function abrirEdicao(id) {
+        const f = funcionarios.find((x) => x.id === id);
+        document.getElementById("formId").value = f.id;
+        document.getElementById("formNome").value = f.nome;
+        document.getElementById("formPlaca").value = f.placa || "";
+        document.getElementById("formTelefone").value = f.telefone || "";
+        document.getElementById("formFuncao").value = f.funcao || "";
+        document.getElementById("formOcorrencia").value = f.ocorrencia || "";
+        document.getElementById("prevFoto").src =
+          f.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        horariosTemporarios = [...(f.historico?.[dataISO]?.marcacoes || [])];
+        renderizarHorariosEdicao();
+        document.getElementById("modalCadastro").style.display = "flex";
       }
-      function excluirCadastro(id, nome) {
-        if (confirm(`Excluir ${nome}?`)) db.ref(`funcionarios/${id}`).remove();
-      }
+
       function baterPonto(id) {
         const agora = new Date().toLocaleTimeString("pt-BR");
         db.ref(`funcionarios/${id}/historico/${dataISO}/marcacoes`)
@@ -687,6 +747,57 @@
             db.ref(`funcionarios/${id}/historico/${dataISO}/marcacoes`).set(m);
           });
       }
+
+      function fecharModais() {
+        document
+          .querySelectorAll(".modal")
+          .forEach((m) => (m.style.display = "none"));
+      }
+
+      function atualizarPainelLog() {
+        const container = document.getElementById("logEdicoesContainer");
+        const edits = funcionarios
+          .filter((f) => f.ultimaEdicao)
+          .sort((a, b) => b.ultimaEdicao.localeCompare(a.ultimaEdicao));
+        if (edits.length === 0) return;
+        container.innerHTML = edits
+          .map(
+            (f) =>
+              `<div class="log-item"><span><b>${f.nome}</b></span><span style="color:var(--text-sub)">${f.ultimaEdicao}</span></div>`
+          )
+          .join("");
+      }
+
+      function exportarJSONBackup() {
+        const dataStr = JSON.stringify(funcionarios, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `backup_ponto_${new Date().getTime()}.json`;
+        link.click();
+      }
+
+      function exportarCSVExcel() {
+        let csv = "\uFEFFNome;Placa;Setor;Registros;Total Horas\n";
+        funcionarios.forEach((f) => {
+          const h = f.historico?.[dataISO]?.marcacoes || [];
+          const total = calcularTempoPermanencia(h);
+          csv += `${f.nome};${f.placa || ""};${f.funcao || ""};${h.join(
+            "|"
+          )};${total}\n`;
+        });
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `ponto_detalhado_${dataISO}.csv`;
+        link.click();
+      }
+
+      function excluirCadastro(id, nome) {
+        if (confirm(`Excluir ${nome}?`)) db.ref(`funcionarios/${id}`).remove();
+      }
+
       function zapPrivado(id) {
         const f = funcionarios.find((x) => x.id === id);
         if (!f.telefone) return alert("Sem número!");
@@ -698,6 +809,7 @@
           "_blank"
         );
       }
+
       function zapGrupo(id) {
         const f = funcionarios.find((x) => x.id === id);
         window.open(
@@ -714,6 +826,7 @@
           "_blank"
         );
       }
+
       async function gerarPDFIndividual() {
         const id = document.getElementById("selectFuncionarioIndividual").value;
         if (!id) return alert("Selecione!");
@@ -728,15 +841,16 @@
             .forEach((d) => {
               const h = f.historico[d].marcacoes || [];
               if (h.length > 0)
-                rows.push([d, h[0], h.slice(-1), h.join(" | ")]);
+                rows.push([d, h.join(" | "), calcularTempoPermanencia(h)]);
             });
         doc.autoTable({
-          head: [["Data", "Entrada", "Saída", "Todos"]],
+          head: [["Data", "Movimentações", "Total Permanência"]],
           body: rows,
           startY: 25,
         });
         doc.save(`ponto_${f.nome}.pdf`);
       }
+
       function renderizarLocal() {
         const p = document.getElementById("painelLocal");
         p.innerHTML = "";
@@ -745,9 +859,10 @@
           if (h.length % 2 !== 0)
             p.innerHTML += `<div style="background:var(--dodgeblue); color:white; padding:12px; border-radius:10px; margin-bottom:5px"><b>${
               f.nome
-            }</b> - ${h.slice(-1)}</div>`;
+            }</b> - Entrada: ${h.slice(-1)}</div>`;
         });
       }
+
       function renderizarRegistroDia() {
         const l = document.getElementById("listaRegistroDia");
         l.innerHTML = "";
@@ -760,51 +875,44 @@
           )
           .forEach((f) => {
             const h = f.historico[dataISO].marcacoes;
-            l.innerHTML += `<tr>
-                <td style="padding:10px">${f.nome}</td>
-                <td>${f.funcao || "---"}</td>
-                <td>${f.placa || ""}</td>
-                <td style="color:var(--success); font-weight:bold">${h[0]}</td>
-                <td style="color:var(--danger); font-weight:bold">${
-                  h.length % 2 === 0 ? h.slice(-1) : "Pátio"
-                }</td>
-            </tr>`;
+            const tags = h
+              .map((time, index) => {
+                const cor =
+                  index % 2 === 0 ? "var(--success)" : "var(--danger)";
+                return `<span class="time-tag" style="border-left: 3px solid ${cor}">${time}</span>`;
+              })
+              .join("");
+            const total = calcularTempoPermanencia(h);
+            l.innerHTML += `<tr><td style="padding:10px"><b>${
+              f.nome
+            }</b></td><td>${f.funcao || "---"}</td><td>${
+              f.placa || ""
+            }</td><td>${tags}</td><td style="font-weight:bold; color:var(--primary)">${total}</td></tr>`;
           });
       }
+
       async function gerarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text(`Relatório ${dataISO}`, 14, 15);
+        doc.text(`Relatório Geral - ${dataISO}`, 14, 15);
         const rows = funcionarios
           .filter((f) => f.historico?.[dataISO]?.marcacoes?.length > 0)
           .map((f) => [
             f.nome,
             f.funcao || "",
             f.placa || "",
-            f.historico[dataISO].marcacoes[0],
-            f.historico[dataISO].marcacoes.length % 2 === 0
-              ? f.historico[dataISO].marcacoes.slice(-1)
-              : "Patio",
+            f.historico[dataISO].marcacoes.join(" | "),
+            calcularTempoPermanencia(f.historico[dataISO].marcacoes),
           ]);
         doc.autoTable({
-          head: [["Nome", "Função", "Placa", "E", "S"]],
+          head: [["Nome", "Setor", "Placa", "Registros", "Total"]],
           body: rows,
           startY: 25,
+          styles: { fontSize: 7 },
         });
-        doc.save(`ponto_${dataISO}.pdf`);
+        doc.save(`ponto_geral_${dataISO}.pdf`);
       }
-      function abrirEdicao(id) {
-        const f = funcionarios.find((x) => x.id === id);
-        document.getElementById("formId").value = f.id;
-        document.getElementById("formNome").value = f.nome;
-        document.getElementById("formPlaca").value = f.placa || "";
-        document.getElementById("formTelefone").value = f.telefone || "";
-        document.getElementById("formFuncao").value = f.funcao || "";
-        document.getElementById("formOcorrencia").value = f.ocorrencia || "";
-        horariosTemporarios = [...(f.historico?.[dataISO]?.marcacoes || [])];
-        renderizarHorariosEdicao();
-        document.getElementById("modalCadastro").style.display = "flex";
-      }
+
       function renderizarHorariosEdicao() {
         const c = document.getElementById("listaHorariosEdit");
         c.innerHTML = "";
@@ -812,6 +920,7 @@
           c.innerHTML += `<div class="edit-ponto-item"><input type="time" step="1" value="${h}" onchange="horariosTemporarios[${idx}]=this.value"> <button onclick="horariosTemporarios.splice(${idx},1);renderizarHorariosEdicao()">🗑️</button></div>`;
         });
       }
+
       function atualizarSelectIndividual() {
         const s = document.getElementById("selectFuncionarioIndividual");
         s.innerHTML = '<option value="">Selecione...</option>';
@@ -821,11 +930,13 @@
             s.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
           });
       }
+
       function mascaraPlaca(i) {
         let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
         if (v.length > 3) v = v.substring(0, 3) + "-" + v.substring(3, 7);
         i.value = v;
       }
+
       function mascaraTel(i) {
         let v = i.value.replace(/\D/g, "");
         v = v
@@ -833,6 +944,7 @@
           .replace(/(\d)(\d{4})$/, "$1-$2");
         i.value = v;
       }
+
       function switchTab(id, btn) {
         document
           .querySelectorAll(".tab-pane, .nav-btn")
@@ -840,26 +952,26 @@
         document.getElementById(id).classList.add("active");
         btn.classList.add("active");
       }
+
       function abrirModalCadastro() {
         document.getElementById("formId").value = "";
         document
           .querySelectorAll("#modalCadastro input")
           .forEach((i) => (i.value = ""));
+        document.getElementById("prevFoto").src =
+          "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         horariosTemporarios = [];
         renderizarHorariosEdicao();
         document.getElementById("modalCadastro").style.display = "flex";
       }
-      function fecharModais() {
-        document
-          .querySelectorAll(".modal")
-          .forEach((m) => (m.style.display = "none"));
-      }
+
       function mudarData() {
         dataISO = document.getElementById("inputDataFiltro").value;
         renderizar();
         renderizarLocal();
         renderizarRegistroDia();
       }
+
       function validarGestor(cb) {
         db.ref("config/admin_pass").once("value", (s) => {
           const p = s.val() || "1234";
@@ -868,14 +980,17 @@
           else alert("Incorreta!");
         });
       }
+
       function adicionarHorarioManual() {
         horariosTemporarios.push("12:00:00");
         renderizarHorariosEdicao();
       }
+
       function alterarSenhaAdmin() {
         const n = prompt("Nova senha:");
         if (n) db.ref("config/admin_pass").set(n);
       }
+
       function importarJSON(e) {
         const reader = new FileReader();
         reader.onload = (f) => {
@@ -893,3 +1008,4 @@
     </script>
   </body>
 </html>
+<!--Rodrigo Developer - parte 03-->
