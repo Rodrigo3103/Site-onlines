@@ -67,7 +67,7 @@
         margin: 0 auto;
       }
 
-      /* AJUSTE PARA SELEÇÃO DE ARQUIVO */
+      /* ESTILOS DA FOTO ATUALIZADOS */
       .photo-captured-wrap {
         width: 65px;
         height: 65px;
@@ -466,16 +466,16 @@
           <button
             class="btn btn-sm"
             style="background: var(--primary); margin: 0; flex: 1"
-            onclick="document.getElementById('inputFotoArquivo').click()"
+            onclick="document.getElementById('inputFoto').click()"
           >
-            📁 Carregar Foto
+            📸 Selecionar Foto
           </button>
           <input
             type="file"
-            id="inputFotoArquivo"
-            style="display: none"
+            id="inputFoto"
             accept="image/*"
-            onchange="importarFotoArquivo(event)"
+            style="display: none"
+            onchange="carregarFotoDoAparelho(this)"
           />
         </div>
 
@@ -581,19 +581,18 @@
 
       document.getElementById("inputDataFiltro").value = dataISO;
 
-      /* NOVA FUNÇÃO CIRÚRGICA PARA IMPORTAR FOTO DE ARQUIVO */
-      function importarFotoArquivo(event) {
-        const file = event.target.files[0];
-        if (file) {
+      /* NOVA FUNÇÃO DE IMAGEM DO APARELHO */
+      function carregarFotoDoAparelho(input) {
+        if (input.files && input.files[0]) {
           const reader = new FileReader();
-          reader.onload = (e) => {
+          reader.onload = function (e) {
             document.getElementById("prevFoto").src = e.target.result;
           };
-          reader.readAsDataURL(file);
+          reader.readAsDataURL(input.files[0]);
         }
       }
 
-      /* FUNÇÕES ORIGINAIS PRESERVADAS SEM ALTERAÇÃO */
+      /* TODAS AS DEMAIS FUNÇÕES PRESERVADAS INTEGRALMENTE */
       function calcularTempoPermanencia(marcacoes) {
         if (marcacoes.length < 2) return "---";
         let totalMinutos = 0;
